@@ -1,4 +1,11 @@
-Laravel -এ CRUD Operation এর জন্য 
+Laravel -এ CRUD Operation এর জন্য ৫টি Step Follow করতে হয়। সেগুলো হলোঃ
+
+1. Routes               =>  `routes/web.php`
+2. Model                => `app\Models\Crud.php`
+3. Migration          => `database\migrations\2025_04_14_164123_create_cruds_table.php`
+4. Controller         => `app\Http\Controllers\CrudController.php`
+5. Views                =>  `index.blade.php` , `create.blade.php` , `edit.blade.php`
+নিচে এগুলোর বিস্তারিত বর্ণনা দেয়া হলোঃ
 
 ## Step-1:
 
