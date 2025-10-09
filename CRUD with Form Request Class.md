@@ -5,7 +5,8 @@ Laravel -এ CRUD Operation এর জন্য ৫টি Step Follow করত�
 2. Model                => `app\Models\Crud.php`
 3. Migration          => `database\migrations\2025_04_14_164123_create_cruds_table.php`
 4. Controller         => `app\Http\Controllers\CrudController.php`
-5. Views                =>  `index.blade.php` , `create.blade.php` , `edit.blade.php`
+5. Request form   =>  `app\Http\Requests\Crud4Request.php`
+6. Views                =>  `index.blade.php` , `create.blade.php` , `edit.blade.php`
    
 নিচে এগুলোর বিস্তারিত বর্ণনা দেয়া হলোঃ
 

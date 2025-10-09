@@ -225,19 +225,20 @@ class Crud2Controller extends Controller
     public function destroy(string $id)
     {
         try {
-            $crud2 = Crud2::findOrFail($id);
+            $crud3 = Crud3::findOrFail($id);
 
-            // যদি একাধিক ছবি থাকে
-            if ($crud2->image && is_array($crud2->image)) {
-                foreach ($crud2->image as $imagePath) {
+            if ($crud3->image) {
+                $images = json_decode($crud3->image, true) ?? [];
+                foreach ($images as $imagePath) {
+                    $imagePath = ltrim($imagePath, '/');
                     if (file_exists(public_path($imagePath))) {
                         unlink(public_path($imagePath));
                     }
                 }
             }
 
-            $crud2->delete();
-            return redirect()->route('dashboard.crud-2.index')->with('success', 'Data deleted successfully!');
+            $crud3->delete();
+            return redirect()->route('dashboard.crud-3.index')->with('success', 'Data deleted successfully!');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Something went wrong: ' . $e->getMessage());
         }
