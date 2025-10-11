@@ -1,13 +1,18 @@
 
 Laravel -এ CRUD Operation এর জন্য ৫টি Step Follow করতে হয়। সেগুলো হলোঃ
 
-1. Routes              =>  `routes/web.php`
-2. Model              => `app\Models\Crud.php`
-3. Migration         => `database\migrations\2025_04_14_164123_create_cruds_table.php`
-4. Controller         => `app\Http\Controllers\CrudController.php`
+1. Routes              =>  `routes\web.php`
+2. Model              => `app\Models\Crud3.php`
+3. Migration         => `database\migrations\2025_04_14_164123_create_crud3s_table.php`
+4. Controller         => `app\Http\Controllers\Crud3Controller.php`
 5. Views                =>  `index.blade.php` , `create.blade.php` , `edit.blade.php`
    
 যেহেতু এখানে আমরা Separately Multiple Image / File আপলোড করা দেখবো, সেজন্য এখানে extra কিছু কাজ করতে হবে। Multiple file গ্রহণের জন্য "Array" Use করবো। File গুলো আলাদাভাবে Input দেয়ার জন্য extra field যোগ করতে JavaScript ব্যবহার করবো। নিচে এগুলোর বিস্তারিত বর্ণনা দেয়া হলোঃ
+#### **Workflow**:
+```scss
+		(Route → Controller → Model → View)
+```
+____
 ## Step-1:
 
 `routes/web.php`:
@@ -25,9 +30,7 @@ Route::get('/dashboard', function () {
 Route::group(['prefix' => 'dashboard', 'as' => 'dashboard.'], function () {
 
     Route::resources([
-
-        'crud-2' => Crud2Controller::class,
-
+        'crud-3' => Crud2Controller::class,
     ]);
 });
 ```
@@ -35,9 +38,9 @@ ______
 
 ## Step-2:
 
-`app\Models\Crud2.php`:
+`app\Models\Crud3.php`:
 ```php
-class Crud2 extends Model
+class Crud3 extends Model
 {
     use HasFactory;
 
@@ -55,9 +58,9 @@ _____
 
 ## Step-3:
 
-`database\migrations\2025_04_22_153012_create_crud2s_table.php`:
+`database\migrations\2025_04_22_153012_create_crud3s_table.php`:
 ```php
-Schema::create('crud2s', function (Blueprint $table) {
+Schema::create('crud3s', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->string('email');
@@ -71,21 +74,21 @@ ___
 
 ## Step-4:
 
-`app\Http\Controllers\Crud2Controller.php`:
+`app\Http\Controllers\Crud3Controller.php`:
 ```php
 class Crud2Controller extends Controller
 {
     
     public function index()
     {
-        $crud2 = Crud2::orderby('id', 'asc')->paginate(3);
-        return view('components.CRUD-2.index', compact('crud2'));
+        $crud3 = Crud3::orderby('id', 'asc')->paginate(3);
+        return view('components.CRUD-3.index', compact('crud3'));
     }
 
     
     public function create()
     {
-        return view('components.CRUD-2.create');
+        return view('components.CRUD-3.create');
     }
 
     
@@ -93,12 +96,12 @@ class Crud2Controller extends Controller
     {
         try {
             $validated = $request->validate([
-                'name' => 'required|string|max:255',
-                'email' => 'required|string|email|max:255',
-                'phone' => 'required|string|max:255',
-                'image' => 'required|array|min:1', // min 1 image required
+                'name'    => 'required|string|max:255',
+                'email'   => 'required|string|email|max:255',
+                'phone'   => 'required|string|max:255',
+                'image'   => 'required|array|min:1', // min 1 image required
                 'image.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
-                'status' => 'required|in:active,inactive',
+                'status'  => 'required|in:active,inactive',
             ]);
 
             $image_paths = [];
@@ -107,28 +110,34 @@ class Crud2Controller extends Controller
                 foreach ($request->file('image') as $image) {
                     if ($image->isValid()) {
                         $imgName = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
-                        $image->move(public_path('uploads/images/crud2'), $imgName);
-                        $image_paths[] = 'uploads/images/crud2/' . $imgName;
+                        $image->move(public_path('uploads/images/crud3'), $imgName);
+                        $image_paths[] = 'uploads/images/crud3/' . $imgName;
                     }
                 }
             }
 
             // কমপক্ষে ১টি ইমেজ আপলোড হয়েছে কিনা চেক করা:
             if (empty($image_paths)) {
-                return redirect()->back()->with('error', 'At least one valid image is required.');
+                return redirect()
+	                ->back()
+	                ->with('error', 'At least one valid image is required.');
             }
 
-            Crud2::create([
-                'name' => $validated['name'],
-                'email' => $validated['email'],
-                'phone' => $validated['phone'],
-                'image' => json_encode($image_paths),
+            Crud3::create([
+                'name'   => $validated['name'],
+                'email'  => $validated['email'],
+                'phone'  => $validated['phone'],
+                'image'  => json_encode($image_paths),
                 'status' => $validated['status'],
             ]);
 
-            return redirect()->route('dashboard.crud-2.index')->with('success', 'Data saved successfully!');
+            return redirect()
+	            ->route('dashboard.crud-3.index')
+	            ->with('success', 'Data saved successfully!');
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Something went wrong: ' . $e->getMessage());
+            return redirect()
+	            ->back()
+	            ->with('error', 'Something went wrong: ' . $e->getMessage());
         }
     }
 
@@ -140,32 +149,32 @@ class Crud2Controller extends Controller
 
     public function edit(string $id)
     {
-        $crud2 = Crud2::findOrFail($id);
-        return view('components.CRUD-2.edit', compact('crud2'));
+        $crud3 = Crud3::findOrFail($id);
+        return view('components.CRUD-3.edit', compact('crud3'));
     }
 
     public function update(Request $request, string $id)
     {
-        $crud2 = Crud2::findOrFail($id);
+        $crud3 = Crud3::findOrFail($id);
 
         try {
             $validated = $request->validate([
-                'name' => 'required|string|max:255',
-                'email' => 'required|string|email|max:255',
-                'phone' => 'required|string|max:255',
-                'existing_images' => 'sometimes|array',
-                'existing_images.*' => 'sometimes|string',
-                'delete_images' => 'sometimes|array',
-                'delete_images.*' => 'sometimes|string',
-                'replace_images' => 'sometimes|array',
+                'name'             => 'required|string|max:255',
+                'email'            => 'required|string|email|max:255',
+                'phone'            => 'required|string|max:255',
+                'existing_images'  => 'sometimes|array',
+                'existing_images.*'=> 'sometimes|string',
+                'delete_images'    => 'sometimes|array',
+                'delete_images.*'  => 'sometimes|string',
+                'replace_images'   => 'sometimes|array',
                 'replace_images.*' => 'sometimes|image|mimes:jpeg,png,jpg,gif|max:2048',
-                'new_images' => 'sometimes|array',
-                'new_images.*' => 'sometimes|image|mimes:jpeg,png,jpg,gif|max:2048',
-                'status' => 'required|in:active,inactive',
+                'new_images'       => 'sometimes|array',
+                'new_images.*'     => 'sometimes|image|mimes:jpeg,png,jpg,gif|max:2048',
+                'status'           => 'required|in:active,inactive',
             ]);
 
             // Handle existing images
-            $existingImages = is_array($crud2->image) ? $crud2->image : (json_decode($crud2->image, true) ?? []);
+            $existingImages = is_array($crud3->image) ? $crud3->image : (json_decode($crud3->image, true) ?? []);
 
             $updatedImages = [];
 
@@ -208,17 +217,21 @@ class Crud2Controller extends Controller
             }
 
             // Update the record
-            $crud2->update([
-                'name' => $validated['name'],
-                'email' => $validated['email'],
-                'phone' => $validated['phone'],
-                'image' => !empty($updatedImages) ? json_encode($updatedImages) : null,
+            $crud3->update([
+                'name'   => $validated['name'],
+                'email'  => $validated['email'],
+                'phone'  => $validated['phone'],
+                'image'  => !empty($updatedImages) ? json_encode($updatedImages) : null,
                 'status' => $validated['status'],
             ]);
 
-            return redirect()->route('dashboard.crud-2.index')->with('success', 'Data updated successfully!');
+            return redirect()
+	            ->route('dashboard.crud-3.index')
+	            ->with('success', 'Data updated successfully!');
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Something went wrong: ' . $e->getMessage())->withInput();
+            return redirect()
+	            ->back()
+	            ->with('error', 'Something went wrong: ' . $e->getMessage())->withInput();
         }
     }
 
@@ -238,9 +251,13 @@ class Crud2Controller extends Controller
             }
 
             $crud3->delete();
-            return redirect()->route('dashboard.crud-3.index')->with('success', 'Data deleted successfully!');
+            return redirect()
+	            ->route('dashboard.crud-3.index')
+	            ->with('success', 'Data deleted successfully!');
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Something went wrong: ' . $e->getMessage());
+            return redirect()
+	            ->back()
+	            ->with('error', 'Something went wrong: ' . $e->getMessage());
         }
     }
 }
@@ -309,7 +326,7 @@ ____
                                     <h4 class="widget-title " style="color: #fff;">CRUD List</h4>
 
                                     <span class="widget-toolbar">
-                                        <a href="{{ route('dashboard.crud-2.create') }}" style="color: #fff;">
+                                        <a href="{{ route('dashboard.crud-3.create') }}" style="color: #fff;">
                                             <i class="ace-icon fa fa-plus"></i> Create Position
                                         </a>
                                     </span>
@@ -338,10 +355,10 @@ ____
                                     <tbody>
 
                                         @php
-                                            $sl = $crud2->firstItem() ?? 0;
+                                            $sl = $crud3->firstItem() ?? 0;
                                         @endphp
 
-                                        @forelse ($crud2 as $crud)
+                                        @forelse ($crud3 as $crud)
                                             <tr>
                                                 <td style="font-weight: bold;"> {{ $sl++ }}. </td>
                                                 <td> {{ $crud->name }} </td>
@@ -388,12 +405,12 @@ ____
                                                         </a>
 
                                                         <a class="green"
-                                                            href="{{ route('dashboard.crud-2.edit', $crud->id) }}">
+                                                            href="{{ route('dashboard.crud-3.edit', $crud->id) }}">
                                                             <i class="ace-icon fa fa-pencil bigger-130"></i>
                                                         </a>
 
                                                         <form
-                                                            action="{{ route('dashboard.crud-2.destroy', $crud->id) }}"
+                                                            action="{{ route('dashboard.crud-3.destroy', $crud->id) }}"
                                                             method="POST" style="display:inline;"
                                                             onsubmit="return confirm('Are you sure you want to delete this item?');">
 
@@ -417,7 +434,7 @@ ____
                                 </table>
 
                                 <div class="text-center">
-                                    {{ $crud2->links('pagination::bootstrap-4') }}
+                                    {{ $crud3->links('pagination::bootstrap-4') }}
                                 </div>
 
                             </div>
@@ -501,7 +518,7 @@ ____
                                         <h4 class="widget-title" style="color: #fff;">Create Data</h4>
 
                                         <span class="widget-toolbar">
-                                            <a href="{{ route('dashboard.crud-2.index') }}" style="color: #fff;">
+                                            <a href="{{ route('dashboard.crud-3.index') }}" style="color: #fff;">
                                                 <i class="ace-icon fa fa-plus"></i> Go To Index
                                             </a>
                                         </span>
@@ -512,7 +529,7 @@ ____
                                 <!-- div.table-responsive -->
 
                                 <!-- div.dataTables_borderWrap -->
-                                <form action="{{ route('dashboard.crud-2.store') }}" method="POST"
+                                <form action="{{ route('dashboard.crud-3.store') }}" method="POST"
                                     enctype="multipart/form-data">
                                     @csrf
 
@@ -565,7 +582,7 @@ ____
                                             Submit
                                         </button>
 
-                                        <a href="{{ route('dashboard.crud.index') }}" class="btn btn-warning">
+                                        <a href="{{ route('dashboard.crud-3.index') }}" class="btn btn-warning">
                                             <i class="ace-icon fa fa-arrow-left bigger-110"></i>
                                             Back
                                         </a>
@@ -647,7 +664,7 @@ ____
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div class="table-header d-flex justify-content-between align-items-stretch">
                                         <span>Edit Entry</span>
-                                        <a href="{{ route('dashboard.crud-2.index') }}"
+                                        <a href="{{ route('dashboard.crud-3.index') }}"
                                             class="pull-right btn btn-sm btn-white h-100 d-flex align-items-center"
                                             style="margin-left: auto;">
                                             <i class="fa fa-list me-1"></i> Back to List
@@ -656,7 +673,7 @@ ____
                                 </div>
 
                                 <!-- Edit Form Start -->
-                                <form action="{{ route('dashboard.crud-2.update', $crud2->id) }}" method="POST"
+                                <form action="{{ route('dashboard.crud-3.update', $crud3->id) }}" method="POST"
                                     enctype="multipart/form-data">
                                     @csrf
                                     @method('PUT')
@@ -664,28 +681,28 @@ ____
                                     <div class="form-group">
                                         <label for="name">Name</label>
                                         <input type="text" name="name" class="form-control"
-                                            value="{{ $crud2->name }}" required>
+                                            value="{{ $crud3->name }}" required>
                                     </div>
 
                                     <div class="form-group">
                                         <label for="phone">Phone No</label>
                                         <input type="text" name="phone" class="form-control"
-                                            value="{{ $crud2->phone }}" required>
+                                            value="{{ $crud3->phone }}" required>
                                     </div>
 
                                     <div class="form-group">
                                         <label for="email">Email</label>
                                         <input type="email" name="email" class="form-control"
-                                            value="{{ $crud2->email }}" required>
+                                            value="{{ $crud3->email }}" required>
                                     </div>
 
                                     <!-- Current Images Section -->
                                     <div class="form-group">
                                         <label>Current Images</label><br>
                                         @php
-                                            $existingImages = is_array($crud2->image)
-                                                ? $crud2->image
-                                                : json_decode($crud2->image, true) ?? [];
+                                            $existingImages = is_array($crud3->image)
+                                                ? $crud3->image
+                                                : json_decode($crud3->image, true) ?? [];
                                         @endphp
 
                                         @if (count($existingImages) > 0)
@@ -746,11 +763,11 @@ ____
                                         <label for="status">Status</label><br>
                                         <label>
                                             <input type="radio" name="status" value="active"
-                                                {{ $crud2->status == 'active' ? 'checked' : '' }}> Active
+                                                {{ $crud3->status == 'active' ? 'checked' : '' }}> Active
                                         </label>
                                         <label>
                                             <input type="radio" name="status" value="inactive"
-                                                {{ $crud2->status == 'inactive' ? 'checked' : '' }}> Inactive
+                                                {{ $crud3->status == 'inactive' ? 'checked' : '' }}> Inactive
                                         </label>
                                     </div>
 
