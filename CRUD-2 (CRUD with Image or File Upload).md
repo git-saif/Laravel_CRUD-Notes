@@ -1,13 +1,17 @@
 Laravel -এ CRUD with Image / File Operation এর জন্যও ৫টি Step Follow করতে হয়। সেগুলো হলোঃ
 
-1. Routes               =>  `routes/web.php`
+1. Routes               =>  `routes\web.php`
 2. Model                => `app\Models\Crud.php`
 3. Migration          => `database\migrations\2025_04_14_164123_create_cruds_table.php`
 4. Controller         => `app\Http\Controllers\CrudController.php`
 5. Views                =>  `index.blade.php` , `create.blade.php` , `edit.blade.php`
 
  তবে এখানে Image / File গুলোকে আলাদাভাবে Handling করতে হয়। নিচে এটি বিস্তারিত বর্ণনা করা হলোঃ  
-
+#### **Workflow**:
+```scss
+		(Route → Controller → Model → View)
+```
+____
 ## Step-1:
 
 `routes/web.php`:
@@ -25,9 +29,7 @@ Route::get('/dashboard', function () {
 Route::group(['prefix' => 'dashboard', 'as' => 'dashboard.'], function () {
 
     Route::resources([
-
-        'crud' => CrudController::class,
-
+        'crud-2' => CrudController::class,
     ]);
 });
 
@@ -38,11 +40,11 @@ _______
 
 1. Create Model & Migration by 1 command line:
 ```bash
-php artisan make:model Crud -m
+php artisan make:model Crud2 -m
 ```
 
 2. Update Code
-`app\Models\Crud.php`: (Model)
+`app\Models\Crud2.php`: (Model)
 ```php
 class Crud extends Model
 {
@@ -56,11 +58,11 @@ _____
 ## Step-3: 
 
 - Create Migration file:
- `database\migrations\2025_04_14_164123_create_cruds_table.php`:
+ `database\migrations\2025_04_14_164123_create_crud2s_table.php`:
 ```php
 public function up(): void
     {
-        Schema::create('cruds', function (Blueprint $table) {
+        Schema::create('crud2s', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->string('email');
@@ -77,7 +79,7 @@ ____
 
 - Create Controller:
 
-`app\Http\Controllers\CrudController.php`: (Controller)
+`app\Http\Controllers\Crud2Controller.php`: (Controller)
 ```php
 class CrudController extends Controller
 {
@@ -105,10 +107,10 @@ class CrudController extends Controller
     {
         try {
             $validated = $request->validate([
-                'name' => 'required|string|max:255',
-                'email' => 'required|string|email|max:255',
-                'phone' => 'required|string|max:255',
-                'image' => 'required|image|mimes:jpeg,png,jpg,gif',
+                'name'   => 'required|string|max:255',
+                'email'  => 'required|string|email|max:255',
+                'phone'  => 'required|string|max:255',
+                'image'  => 'required|image|mimes:jpeg,png,jpg,gif',
                 'status' => 'required|in:active,inactive',
             ]);
 
@@ -122,17 +124,21 @@ class CrudController extends Controller
 
 
             Crud::create([
-                'name' => $validated['name'],
-                'email' => $validated['email'],
-                'phone' => $validated['phone'],
-                'image' => $img_path,
+                'name'   => $validated['name'],
+                'email'  => $validated['email'],
+                'phone'  => $validated['phone'],
+                'image'  => $img_path,
                 'status' => $validated['status'],
             ]);
 
 
-            return redirect()->route('dashboard.crud.index')->with('success', 'Data created successfully!');
+            return redirect()
+	            ->route('dashboard.crud.index')
+	            ->with('success', 'Data created successfully!');
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Something went wrong: ' . $e->getMessage());
+            return redirect()
+	            ->back()
+	            ->with('error', 'Something went wrong: ' . $e->getMessage());
         }
 
     }
@@ -163,10 +169,10 @@ class CrudController extends Controller
 
         try {
             $validated = $request->validate([
-                'name' => 'required|string|max:255',
-                'email' => 'required|string|email|max:255',
-                'phone' => 'required|string|max:255',
-                'image' => 'nullable|image|mimes:jpeg,png,jpg,gif',
+                'name'   => 'required|string|max:255',
+                'email'  => 'required|string|email|max:255',
+                'phone'  => 'required|string|max:255',
+                'image'  => 'nullable|image|mimes:jpeg,png,jpg,gif',
                 'status' => 'required|in:active,inactive',
             ]);
 
@@ -182,16 +188,20 @@ class CrudController extends Controller
             }
 
             $crud->update([
-                'name' => $validated['name'],
-                'email' => $validated['email'],
-                'phone' => $validated['phone'],
-                'image' => $img_path,
+                'name'   => $validated['name'],
+                'email'  => $validated['email'],
+                'phone'  => $validated['phone'],
+                'image'  => $img_path,
                 'status' => $validated['status'],
             ]);
 
-            return redirect()->route('dashboard.crud.index')->with('success', 'Data updated successfully!');
+            return redirect()
+	            ->route('dashboard.crud.index')
+	            ->with('success', 'Data updated successfully!');
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Something went wrong: ' . $e->getMessage());
+            return redirect()
+	            ->back()
+	            ->with('error', 'Something went wrong: ' . $e->getMessage());
         }
     }
 
@@ -208,9 +218,13 @@ class CrudController extends Controller
             }
 
             $crud->delete();
-            return redirect()->route('dashboard.crud.index')->with('success', 'Data deleted successfully!');
+            return redirect()
+	            ->route('dashboard.crud.index')
+	            ->with('success', 'Data deleted successfully!');
         } catch (\Throwable $th) {
-            return redirect()->back()->with('error', 'Something went wrong: ' . $th->getMessage());
+            return redirect()
+	            ->back()
+	            ->with('error', 'Something went wrong: ' . $th->getMessage());
         }
     }
 }
