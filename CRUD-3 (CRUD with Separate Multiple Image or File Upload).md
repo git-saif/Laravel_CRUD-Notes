@@ -13,7 +13,7 @@ Laravel -এ CRUD Operation এর জন্য ৫টি Step Follow করত�
 		(Route → Controller → Model → View)
 ```
 ____
-## Step-1:
+## Step-1: (Web Route)
 
 `routes/web.php`:
 ```php
@@ -36,7 +36,7 @@ Route::group(['prefix' => 'dashboard', 'as' => 'dashboard.'], function () {
 ```
 ______
 
-## Step-2:
+## Step-2: (Model)
 
 `app\Models\Crud3.php`:
 ```php
@@ -56,7 +56,7 @@ class Crud3 extends Model
 ```
 _____
 
-## Step-3:
+## Step-3: (Migration)
 
 `database\migrations\2025_04_22_153012_create_crud3s_table.php`:
 ```php
@@ -72,7 +72,7 @@ Schema::create('crud3s', function (Blueprint $table) {
 ```
 ___
 
-## Step-4:
+## Step-4: (Controller)
 
 `app\Http\Controllers\Crud3Controller.php`:
 ```php
@@ -85,13 +85,11 @@ class Crud2Controller extends Controller
         return view('components.CRUD-3.index', compact('crud3'));
     }
 
-    
     public function create()
     {
         return view('components.CRUD-3.create');
     }
 
-    
     public function store(Request $request)
     {
         try {
@@ -263,7 +261,7 @@ class Crud2Controller extends Controller
 }
 ```
 ____
-## Step-5:
+## Step-5: (View Create)
 
 `index.blade.php`:
 ```html
@@ -448,11 +446,9 @@ ____
     </div>
 </div>
 <!-- /.main-content -->
-
-<!-- /.main-container -->
-
 @endsection
 ```
+_____
 
 `create.blade.php`:
 ```html
@@ -614,7 +610,6 @@ ____
     </div>
 @endif
 
-
 @endsection
 
 @push('scripts')
@@ -628,14 +623,13 @@ ____
 </script>
 @endpush
 ```
+____
 
 `edit.blade.php`:
 ```html
 @extends('layouts.app')
-
 @section('content')
 @section('title', 'Smart ERP - Edit Entry')
-
 <div class="main-content">
     <div class="main-content-inner">
         <div class="breadcrumbs ace-save-state" id="breadcrumbs">
@@ -793,7 +787,6 @@ ____
         </div>
     </div>
 </div>
-
 @endsection
 
 @push('scripts')  // এর জন্য master blade -এ গিয়ে " @stack('scripts') " লিখতে হবে।

@@ -1,9 +1,9 @@
 Laravel -এ CRUD with Image / File Operation এর জন্যও ৫টি Step Follow করতে হয়। সেগুলো হলোঃ
 
 1. Routes               =>  `routes\web.php`
-2. Model                => `app\Models\Crud.php`
-3. Migration          => `database\migrations\2025_04_14_164123_create_cruds_table.php`
-4. Controller         => `app\Http\Controllers\CrudController.php`
+2. Model                => `app\Models\Crud2.php`
+3. Migration          => `database\migrations\2025_04_14_164123_create_crud2s_table.php`
+4. Controller         => `app\Http\Controllers\Crud2Controller.php`
 5. Views                =>  `index.blade.php` , `create.blade.php` , `edit.blade.php`
 
  তবে এখানে Image / File গুলোকে আলাদাভাবে Handling করতে হয়। নিচে এটি বিস্তারিত বর্ণনা করা হলোঃ  
@@ -12,7 +12,7 @@ Laravel -এ CRUD with Image / File Operation এর জন্যও ৫টি S
 		(Route → Controller → Model → View)
 ```
 ____
-## Step-1:
+## Step-1: (Web Route)
 
 `routes/web.php`:
 ```php
@@ -36,7 +36,7 @@ Route::group(['prefix' => 'dashboard', 'as' => 'dashboard.'], function () {
 ```
 _______
 
-## Step-2: 
+## Step-2: (Model)
 
 1. Create Model & Migration by 1 command line:
 ```bash
@@ -55,9 +55,8 @@ class Crud extends Model
 ```
 _____
 
-## Step-3: 
+## Step-3: (Migration)
 
-- Create Migration file:
  `database\migrations\2025_04_14_164123_create_crud2s_table.php`:
 ```php
 public function up(): void
@@ -75,34 +74,23 @@ public function up(): void
 ```
 ____
 
-## Step-4:
-
-- Create Controller:
+## Step-4: (Controller)
 
 `app\Http\Controllers\Crud2Controller.php`: (Controller)
 ```php
 class CrudController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         $crudData = Crud::orderBy('id', 'asc')->paginate(3);
         return view('components.CRUD.index', compact('crudData'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
         return view('components.CRUD.create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         try {
@@ -143,26 +131,17 @@ class CrudController extends Controller
 
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(string $id)
     {
         //
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(string $id)
     {
         $crud = Crud::findOrFail($id);
         return view('components.CRUD.edit', compact('crud'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, string $id)
     {
         $crud = Crud::findOrFail($id);
@@ -205,9 +184,6 @@ class CrudController extends Controller
         }
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(string $id)
     {
         try {
@@ -231,9 +207,7 @@ class CrudController extends Controller
 ```
 ______
 
-## Step-5:
-
-- Create **View** Files : `index.blade.php` , `create.blade.php` , `edit.blade.php`
+## Step-5: (Create View)
 
 `index.blade.php`:
 ```html
@@ -397,12 +371,9 @@ ______
         </div><!-- /.page-content -->
     </div>
 </div>
-<!-- /.main-content -->
-
-<!-- /.main-container -->
 @endsection
 ```
-
+____
 
 `create.blade.php`:
 ```html
@@ -540,10 +511,9 @@ ______
         </div><!-- /.page-content -->
     </div>
 </div>
-<!-- /.main-content -->
 @endsection
 ```
-
+_______
 
 `edit.blade.php`:
 ```html
@@ -661,6 +631,6 @@ ______
         </div><!-- /.page-content -->
     </div>
 </div>
-<!-- /.main-content -->
 @endsection
 ```
+-----

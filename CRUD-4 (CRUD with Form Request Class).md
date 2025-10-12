@@ -2,9 +2,9 @@
 Laravel -এ CRUD Operation এর জন্য ৫টি Step Follow করতে হয়। সেগুলো হলোঃ
 
 1. Routes               =>  `routes\web.php`
-2. Model                => `app\Models\Crud.php`
-3. Migration          => `database\migrations\2025_04_14_164123_create_cruds_table.php`
-4. Controller         => `app\Http\Controllers\CrudController.php`
+2. Model                => `app\Models\Crud4.php`
+3. Migration          => `database\migrations\2025_04_14_164123_create_crud4s_table.php`
+4. Controller         => `app\Http\Controllers\Crud4Controller.php`
 5. Request form   =>  `app\Http\Requests\Crud4Request.php`
 6. Views                =>  `index.blade.php` , `create.blade.php` , `edit.blade.php`
    
@@ -16,7 +16,7 @@ Laravel -এ CRUD Operation এর জন্য ৫টি Step Follow করত�
 ```
 ____
 
-## Step-1:
+## Step-1: (Web Route)
 
 `routes/web.php`:
 ```php
@@ -68,9 +68,6 @@ _____
 ```php
 class Crud4Controller extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         $crud4 = Crud4::orderby('id', 'asc')->paginate(3);
@@ -78,17 +75,11 @@ class Crud4Controller extends Controller
         // resources\views\components\CRUD-4\index.blade.php
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
         return view('components.CRUD-4.create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Crud4Request $request)
     {
         Crud4::create($request->validated());
@@ -99,17 +90,11 @@ class Crud4Controller extends Controller
         
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(string $id)
     {
         //
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(string $id)
     {
         $crud4 = Crud4::findOrFail($id);
@@ -117,9 +102,6 @@ class Crud4Controller extends Controller
         
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Crud4Request $request, Crud4 $crud_4)
     {
         $crud_4->update($request->validated());
@@ -129,22 +111,19 @@ class Crud4Controller extends Controller
             ->with('success', 'Data updated successfully!');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(string $id)
     {
         try {
             $crud_4 = Crud4::findOrFail($id);
             $crud_4->delete();
             return redirect()
-            ->route('dashboard.crud-4.index')
-            ->with('success', 'Data deleted successfully!');
+	            ->route('dashboard.crud-4.index')
+	            ->with('success', 'Data deleted successfully!');
 
         } catch (\Throwable $th) {
             return redirect()
-            ->back()
-            ->with('error', 'Something went wrong: ' . $th->getMessage());
+	            ->back()
+	            ->with('error', 'Something went wrong: ' . $th->getMessage());
         }
     }
 

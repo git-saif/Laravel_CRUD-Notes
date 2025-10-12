@@ -2,10 +2,10 @@
 Laravel -এ CRUD Operation এর জন্য ৫টি Step Follow করতে হয়। সেগুলো হলোঃ
 
 1. Routes               =>  `routes\web.php`
-2. Model                => `app\Models\Crud8.php`
-3. Migration          => `database\migrations\2025_04_14_164123_create_crud8s_table.php`
-4. Controller         => `app\Http\Controllers\Crud8Controller.php`
-5. Request form   =>  `app\Http\Requests\Crud8Request.php`
+2. Model                => `app\Models\Crud9.php`
+3. Migration          => `database\migrations\2025_04_14_164123_create_crud9s_table.php`
+4. Controller         => `app\Http\Controllers\Crud9Controller.php`
+5. Request form   =>  `app\Http\Requests\Crud9Request.php`
 6. Views                =>  `index.blade.php` , `create.blade.php` , `edit.blade.php`
    
 নিচে এগুলোর বিস্তারিত বর্ণনা দেয়া হলোঃ
@@ -24,100 +24,110 @@ Route::group(['prefix' => 'dashboard', 'as' => 'dashboard.'], function () {
 
     Route::resources([
     
-        'crud-8' => Crud8Controller::class,  // Sub-category
+        'crud-9' => Crud9Controller::class,  // Sub-Sub-Category
     ]);
+    // Ajax endpoint to get subcategories for a category
+    Route::get('crud-9/subcategories/{category}', [Crud9Controller::class, 'getSubcategories'])
+        ->name('crud-9.subcategories');
 });
 ```
 _____
 ## Step-2: (Model)
 
-`app\Models\Crud8.php`:
+`app\Models\Crud9.php`:
 ```php
-class Crud8 extends Model
+class Crud9 extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'crud7_id',
+        'crud8_id',
         'name',
         // 'slug',
         'serial_no',
         'status',
     ];
 
-    // Auto Slug Generation 
+    // Auto slug generation
     public static function boot()
     {
         parent::boot();
 
-        static::creating(function ($subcategory) {
-            $subcategory->slug = Str::slug($subcategory->name);
+        static::creating(function ($model) {
+            $model->slug = Str::slug($model->name);
         });
 
-        static::updating(function ($subcategory) {
-            $subcategory->slug = Str::slug($subcategory->name);
+        static::updating(function ($model) {
+            $model->slug = Str::slug($model->name);
         });
     }
-
-
-    // relation -> parent Category (Crud7)
-    public function category()
-    {
-        return $this->belongsTo(Crud7::class, 'crud7_id');
-    }
-
 
     // relation -> parent Subcategory (Crud8)
-    public function subsubcategories()
+    public function subcategory()
     {
-        return $this->hasMany(Crud9::class, 'crud8_id');
+        return $this->belongsTo(Crud8::class, 'crud8_id');
     }
 }
 ```
 ____
 ## Step-3: (Migration)
 
-`database\migrations\2025_05_05_100447_create_crud8s_table.php`:
+`database\migrations\2025_05_05_100447_create_crud9s_table.php`:
 ```php
-	Schema::create('crud8s', function (Blueprint $table) {
+	Schema::create('crud9s', function (Blueprint $table) {
 		$table->id();
-		$table->foreignId('crud7_id')->constrained('crud7s')->onUpdate('cascade')->onDelete('cascade');
+		// parent points to subcategory (crud8s)
+		$table->foreignId('crud8_id')->constrained('crud8s')->onUpdate('cascade')->onDelete('cascade');
 		$table->string('name')->unique();
 		$table->string('slug')->unique();
 		$table->integer('serial_no')->unique();
-		$table->enum('status', ['active', 'inactive'])->default('active');
+		$table->enum('status', ['active', 'inactive'])->default('inactive');
 		$table->timestamps();
 	});
 ```
 _____
 ## Step-4: (Controller)
 
-`app\Http\Controllers\Crud8Controller.php`:
+#### **Using Server Side Rendering :**
+
+**`app\Http\Requests\Crud9Request.php:`**
 ```php
-class Crud8Controller extends Controller
+class Crud9Controller extends Controller
 {
+
     public function index()
     {
-        $crud8 = Crud8::with('category')->orderBy('id', 'asc')->paginate(3);
-        return view('components.CRUD-8.index', compact('crud8'));
+        // eager load subcategory and its category for display
+        $crud9 = Crud9::with('subcategory.category')->orderBy('serial_no', 'asc')->paginate(6);
+        return view('components.CRUD-9.index', compact('crud9'));
     }
 
     public function create()
     {
-        $categories = Crud7::orderBy('serial_no')->get();
-        return view('components.CRUD-8.create', compact('categories'));
+        // সব category আনবে
+	    $categories = Crud7::orderBy('name')->get();
+	
+	    // যেটা selected category
+	    $selectedCategory = request()->query('category');
+	
+	    // যদি category select করা থাকে → শুধু সেই category-র subcategory গুলো আনবে
+	    $subcategories = $selectedCategory 
+	        ? Crud8::where('crud7_id', $selectedCategory)->orderBy('name')->get()
+	        : collect(); // খালি collection
+	
+	    return view('components.CRUD-9.create', compact('categories', 'subcategories', 'selectedCategory'));
     }
 
-    public function store(Crud8Request $request)
+    public function store(Crud9Request $request)
     {
         try {
-            Crud8::create($request->validated());
+            Crud9::create($request->validated());
 
             return redirect()
-                ->route('dashboard.crud-8.index')
-                ->with('success', 'Category created successfully!');
-        } catch (\Throwable $th) {
-            return redirect()->back()->with('error', 'Something went wrong: ' . $th->getMessage());
+                ->route('dashboard.crud-9.index')
+                ->with('success', 'Data saved successfully.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'An error occurred while saving data.');
         }
     }
 
@@ -129,33 +139,151 @@ class Crud8Controller extends Controller
     public function edit(string $id)
     {
         try {
-            $crud8 = Crud8::findOrFail($id);
+            $crud9 = Crud9::findOrFail($id);
             $categories = Crud7::orderBy('name')->get();
-            return view('components.CRUD-8.edit', compact('crud8', 'categories'));
-        } catch (\Throwable $th) {
-            return redirect()->back()->with('error', 'Something went wrong: ' . $th->getMessage());
+
+            // previously selected category & its subcategories
+            $selectedCategory = $crud9->subcategory ? $crud9->subcategory->crud7_id : null;
+            $subcategories = $selectedCategory
+                ? Crud8::where('crud7_id', $selectedCategory)->orderBy('name')->get()
+                : collect();
+
+            return view('components.CRUD-9.edit', compact('crud9', 'categories', 'subcategories', 'selectedCategory'));
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Data not found.');
         }
     }
 
-    public function update(Crud8Request $request, string $id)
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Crud9Request $request, string $id)
     {
         try {
-            $crud8 = Crud8::findOrFail($id);
-            $crud8->update($request->validated());
-            return redirect()->route('dashboard.crud-8.index')->with('success', 'SubCategory updated successfully.');
-        } catch (\Throwable $th) {
-            return redirect()->back()->with('error', 'Something went wrong: ' . $th->getMessage());
+            $crud9 = Crud9::findOrFail($id);
+            $crud9->update($request->validated());
+
+            return redirect()
+                ->route('dashboard.crud-9.index')
+                ->with('success', 'Updated successfully.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'An error occurred while updating data.');
+        }
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(string $id)
+    {
+        try {
+            $crud9 = Crud9::findOrFail($id);
+            $crud9->delete();
+
+            return redirect()
+                ->route('dashboard.crud-9.index')
+                ->with('success', 'Deleted.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'An error occurred while deleting data.');
+        }
+    } 
+}
+```
+----
+
+#### **Using Ajax Rendering :**
+`app\Http\Controllers\Crud9Controller.php`:
+```php
+class Crud9Controller extends Controller
+{
+
+    public function index()
+    {
+        // eager load subcategory and its category for display
+        $crud9 = Crud9::with('subcategory.category')->orderBy('serial_no', 'asc')->paginate(10);
+        return view('components.CRUD-9.index', compact('crud9'));
+    }
+
+    public function create()
+    {
+        // Load categories
+        $categories = Crud7::orderBy('name')->get();
+
+        // Load subcategories by AJAX
+        $subcategories = collect();
+
+        // pass both variables to view
+        return view('components.CRUD-9.create', compact('categories', 'subcategories'));
+    }
+
+    
+    // NEW FUNCTION FOR AJAX
+    public function getSubcategories($categoryId)
+    {
+        $subcategories = Crud8::where('crud7_id', $categoryId)
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        return response()->json($subcategories);
+    }
+
+    public function store(Crud9Request $request)
+    {
+        try {
+            Crud9::create($request->validated());
+
+            return redirect()
+                ->route('dashboard.crud-9.index')
+                ->with('success', 'Data saved successfully.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'An error occurred while saving data.');
+        }
+    }
+
+    public function show(string $id)
+    {
+        //
+    }
+
+    public function edit(string $id)
+    {
+        try {
+            $crud9 = Crud9::findOrFail($id);
+            $categories = Crud7::orderBy('name')->get();
+            $subcategories = Crud8::where('crud7_id', $crud9->category_id ?? $crud9->subcategory->crud7_id ?? 0)
+                ->orderBy('name')->get();
+
+            return view('components.CRUD-9.edit', compact('crud9', 'categories', 'subcategories'));
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Data not found.');
+        }
+    }
+
+    public function update(Crud9Request $request, string $id)
+    {
+        try {
+            $crud9 = Crud9::findOrFail($id);
+            $crud9->update($request->validated());
+
+            return redirect()
+                ->route('dashboard.crud-9.index')
+                ->with('success', 'Updated successfully.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'An error occurred while updating data.');
         }
     }
 
     public function destroy(string $id)
     {
         try {
-            $crud8 = Crud8::findOrFail($id);
-            $crud8->delete();
-            return redirect()->route('dashboard.crud-8.index')->with('success', 'SubCategory deleted successfully.');
-        } catch (\Throwable $th) {
-            return redirect()->back()->with('error', 'Something went wrong: ' . $th->getMessage());
+            $crud9 = Crud9::findOrFail($id);
+            $crud9->delete();
+
+            return redirect()
+                ->route('dashboard.crud-9.index')
+                ->with('success', 'Deleted.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'An error occurred while deleting data.');
         }
     }
 }
@@ -164,9 +292,10 @@ ______
 
 ## Step-5: (Form Request)
 
-**`app\Http\Requests\Crud8Request.php:`**
+
+**`app\Http\Requests\Crud9Request.php:`**
 ```php
-class Crud8Request extends FormRequest
+class Crud9Request extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -238,9 +367,261 @@ class Crud8Request extends FormRequest
     }
 }
 ```
-------
+-------
 
 ## Step-6: (View Create)
+
+#### **Using Server Side Rendering :**
+
+`index.blade.php`: (form only)
+```html
+<div>
+	<table id="dynamic-table" class="table table-striped table-bordered table-hover">
+	  <thead>
+		<tr>
+		  <th style="font-weight: bold;">Sl No</th>
+		  <th>Category (From Crud7)</th>
+		  <th>Subcategory</th>
+		  <th>Sub-Sub Category</th>
+		  <th>Slug</th>
+		  <th>Serial No</th>
+		  <th>Status</th>
+		  <th>Action</th>
+		</tr>
+	  </thead>
+
+	  <tbody>
+		@php $sl = $crud9->firstItem() ?? 1; @endphp
+		@forelse ($crud9 as $item)
+		<tr>
+		  <td style="font-weight: bold;">{{ $sl++ }}.</td>
+
+		  {{-- Foreign key data from Crud7 --}}
+		  <td>{{ $item->subcategory->category->name ?? 'N/A' }}</td>
+		  <td>{{ $item->subcategory->name ?? 'N/A' }}</td>
+		  <td>{{ $item->name }}</td>
+		  <td>{{ $item->slug }}</td>
+		  <td>{{ $item->serial_no }}</td>
+		  
+		  <td>
+			@if ($item->status === 'active')
+			<span class="badge badge-success">Active</span>
+			@else
+			<span class="badge badge-danger">Inactive</span>
+			@endif
+		  </td>
+
+		  <td>
+			<div class="hidden-sm hidden-xs action-buttons">
+			  <a class="blue" href="#">
+				<i class="ace-icon fa fa-eye bigger-130"></i>
+			  </a>
+
+			  <a class="green" href="{{ route('dashboard.crud-9.edit', $item->id) }}">
+				<i class="ace-icon fa fa-pencil bigger-130"></i>
+			  </a>
+
+			  <form action="{{ route('dashboard.crud-9.destroy', $item->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this item?');">
+				@csrf
+				@method('DELETE')
+				<button type="submit" class="red" style="border: none; background: none;">
+				  <i class="ace-icon fa fa-trash-o bigger-130"></i>
+				</button>
+			  </form>
+			</div>
+		  </td>
+		</tr>
+		@empty
+		<tr>
+		  <td colspan="8" class="text-center text-danger">No data found.</td>
+		</tr>
+		@endforelse
+	  </tbody>
+	</table>
+	<div class="text-center">
+	  {{ $crud9->links('pagination::bootstrap-4') }}
+	</div>
+</div>
+```
+---
+
+`create.blade.php`: (form only)
+```html
+<!-- Form Start -->
+<form action="{{ route('dashboard.crud-9.store') }}" method="POST">
+  @csrf
+
+  {{-- Parent Category (From Crud7) --}}
+  <div class="form-group">
+	<label for="category_id">Category</label>
+	<select id="category" name="category" class="form-control" onchange="window.location='{{ route('dashboard.crud-9.create') }}?category=' + this.value">
+	  <option value="">-- Select Category --</option>
+	  @foreach($categories as $cat)
+	  <option value="{{ $cat->id }}" {{ $selectedCategory == $cat->id ? 'selected' : '' }}>
+		{{ $cat->name }}
+	  </option>
+	  @endforeach
+	</select>
+	@error('category_id') <small class="text-danger">{{ $message }}</small> @enderror
+  </div>
+
+  {{-- Parent Subcategory (From Crud8) --}}
+  <div class="form-group">
+	<label for="crud8_id">Subcategory</label>
+	 <select id="crud8_id" name="crud8_id" class="form-control" required {{ $selectedCategory ? '' : 'disabled' }}>
+	   <option value="">-- Select Subcategory --</option>
+	   @foreach($subcategories as $sub)
+	   <option value="{{ $sub->id }}">{{ $sub->name }}</option>
+	   @endforeach
+	 </select>
+
+	@error('crud8_id') <small class="text-danger">{{ $message }}</small> @enderror
+  </div>
+
+  {{-- Sub-Sub Category Name --}}
+  <div class="form-group">
+	<label for="name">Sub-Sub Category Name</label>
+	<input type="text" id="name" name="name" class="form-control @error('name') is-invalid @enderror" value="{{ old('name') }}" required>
+	@error('name') <small class="text-danger">{{ $message }}</small> @enderror
+  </div>
+
+  {{-- Slug (auto-generated) --}}
+  <div class="form-group">
+	<label for="slug">Slug (Auto)</label>
+	<input type="text" id="slug" name="slug" class="form-control" value="{{ old('slug') }}" readonly>
+  </div>
+
+  {{-- Serial --}}
+  <div class="form-group">
+	<label for="serial_no">Serial No</label>
+	<input type="number" name="serial_no" class="form-control @error('serial_no') is-invalid @enderror" value="{{ old('serial_no') }}" required>
+	@error('serial_no') <small class="text-danger">{{ $message }}</small> @enderror
+  </div>
+  
+  {{-- Status --}}
+  <div class="form-group">
+	<label for="status">Status</label><br>
+	<label>
+	  <input type="radio" name="status" value="active" {{ old('status', 'active') == 'active' ? 'checked' : '' }}>
+	  Active
+	</label>
+	&nbsp;&nbsp;
+	<label>
+	  <input type="radio" name="status" value="inactive" {{ old('status') == 'inactive' ? 'checked' : '' }}>
+	  Inactive
+	</label>
+	@error('status')
+	<br><small class="text-danger">{{ $message }}</small>
+	@enderror
+  </div>
+
+  {{-- Action Buttons --}}
+  <div class="form-actions center mt-3">
+	<button type="submit" class="btn btn-sm btn-success">
+	  Save
+	  <i class="ace-icon fa fa-save bigger-110"></i>
+	</button>
+
+	<a href="{{ route('dashboard.crud-9.index') }}" class="btn btn-sm btn-warning">
+	  <i class="ace-icon fa fa-arrow-left bigger-110"></i> Back
+	</a>
+  </div>
+</form>
+{{-- Form End --}}
+```
+___
+
+`edit.blade.php`: (form only)
+```html
+<!-- Edit Form Start -->
+<form action="{{ route('dashboard.crud-9.update', $crud9->id) }}" method="POST" enctype="multipart/form-data">
+  @csrf
+  @method('PUT')
+
+  {{-- Parent Category --}}
+  <div class="form-group">
+	<label for="category_id">Category</label>
+	<select name="category_id" id="category_id" class="form-control" onchange="window.location='{{ route('dashboard.crud-9.edit', $crud9->id) }}?category=' + this.value">
+	  <option value="">-- Select Category --</option>
+	  @foreach($categories as $cat)
+	  <option value="{{ $cat->id }}" {{ $selectedCategory == $cat->id ? 'selected' : '' }}>
+		{{ $cat->name }}
+	  </option>
+	  @endforeach
+	</select>
+	@error('category_id') <small class="text-danger">{{ $message }}</small> @enderror
+  </div>
+
+  {{-- Parent Subcategory --}}
+  <div class="form-group mt-3">
+	<label>Subcategory</label>
+	<select name="crud8_id" class="form-control" {{ $subcategories->isEmpty() ? 'disabled' : '' }}>
+	  <option value="">-- Select Subcategory --</option>
+	  @foreach($subcategories as $sub)
+	  <option value="{{ $sub->id }}" {{ $crud9->crud8_id == $sub->id ? 'selected' : '' }}>
+		{{ $sub->name }}
+	  </option>
+	  @endforeach
+	</select>
+  </div>
+
+  {{-- Name --}}
+  <div class="form-group">
+	<label for="name">Subcategory Name</label>
+	<input type="text" id="name" name="name" class="form-control @error('name') is-invalid @enderror" value="{{ old('name', $crud9->name) }}" placeholder="Enter subcategory name" required>
+	@error('name')
+	<small class="text-danger">{{ $message }}</small>
+	@enderror
+  </div>
+
+  {{-- Slug (auto-generated) --}}
+  <div class="form-group">
+	<label for="slug">Slug (Auto Generated)</label>
+	<input type="text" id="slug" name="slug" class="form-control" value="{{ old('slug', $crud9->slug) }}" readonly>
+  </div>
+
+  {{-- Serial Number --}}
+  <div class="form-group">
+	<label for="serial_no">Serial No</label>
+	<input type="number" name="serial_no" class="form-control @error('serial_no') is-invalid @enderror" value="{{ old('serial_no', $crud9->serial_no) }}" placeholder="Enter serial number" required>
+	@error('serial_no')
+	<small class="text-danger">{{ $message }}</small>
+	@enderror
+  </div>
+
+  {{-- Status --}}
+  <div class="form-group">
+	<label for="status">Status</label><br>
+	<label>
+	  <input type="radio" name="status" value="active" {{ old('status', $crud9->status) == 'active' ? 'checked' : '' }}>
+	  Active
+	</label>
+	&nbsp;&nbsp;
+	<label>
+	  <input type="radio" name="status" value="inactive" {{ old('status', $crud9->status) == 'inactive' ? 'checked' : '' }}>
+	  Inactive
+	</label>
+	@error('status')
+	<br><small class="text-danger">{{ $message }}</small>
+	@enderror
+  </div>
+
+  <div class="form-actions center">
+	<button type="submit" class="btn btn-sm btn-success">
+	  Update
+	  <i class="ace-icon fa fa-check icon-on-right bigger-110"></i>
+	</button>
+
+	<a href="{{ route('dashboard.crud-9.index') }}" class="btn btn-sm btn-warning">
+	  <i class="ace-icon fa fa-arrow-left bigger-110"></i> Back
+	</a>
+  </div>
+</form>
+<!-- Edit Form End -->
+```
+____
+
+#### **Using Ajax Rendering :**
 
 `index.blade.php`:
 ```html
@@ -380,7 +761,6 @@ class Crud8Request extends FormRequest
 </div>
 @endsection
 ```
------
 
 `create.blade.php`:
 ```html
@@ -563,7 +943,6 @@ class Crud8Request extends FormRequest
   </script>
 @endpush
 ```
-----
 
 `edit.blade.php`:
 ```html

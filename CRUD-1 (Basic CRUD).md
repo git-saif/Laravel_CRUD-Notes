@@ -13,7 +13,7 @@ Laravel -এ CRUD Operation এর জন্য ৫টি Step Follow করত�
 		(Route → Controller → Model → View)
 ```
 ____
-## Step-1:
+## Step-1: (Web Route)
 
 `routes/web.php`:
 ```php
@@ -35,7 +35,7 @@ Route::group(['prefix' => 'dashboard', 'as' => 'dashboard.'], function () {
 });
 ```
 _____
-## Step-2:
+## Step-2: (Model)
 
 - Make model with migration file:
 ```bash
@@ -52,21 +52,21 @@ class Crud1 extends Model
 }
 ```
 ____
-## Step-3:
+## Step-3: (Migration)
 
 `database\migrations\2025_05_05_100447_create_crud1s_table.php`:
 ```php
-Schema::create('crud1s', function (Blueprint $table) {
-            $table->id();
-            $table->string('topic_name');
-            $table->string('title');
-            $table->string('description');
-            $table->enum('status', ['active', 'inactive'])->default('active');
-            $table->timestamps();
-        });
+	Schema::create('crud1s', function (Blueprint $table) {
+		$table->id();
+		$table->string('topic_name');
+		$table->string('title');
+		$table->string('description');
+		$table->enum('status', ['active', 'inactive'])->default('active');
+		$table->timestamps();
+	});
 ```
 _____
-## Step-4:
+## Step-4: (Controller)
 
 `app\Http\Controllers\Crud1Controller.php`:
 ```php
@@ -157,7 +157,7 @@ class Crud1Controller extends Controller
 }
 ```
 ______
-## Step-5:
+## Step-5: (View Create)
 
 `index.blade.php`:
 ```html
@@ -166,9 +166,7 @@ ______
 @section('content')
 @section('title', 'Smart ERP - CRUD')
 <!-- Table is here -->
-
 <div class="page-content">
-
 	<div class="page-header">
 		<h1>
 			Tables
@@ -272,18 +270,15 @@ ______
 						<div class="text-center">
 							{{ $crud1->links('pagination::bootstrap-4') }}
 						</div>
-
-
 					</div>
 				</div>
 			</div>
-
-			<!-- PAGE CONTENT ENDS -->
 		</div><!-- /.col -->
 	</div>
 </div><!-- /.page-content -->
 @endsection
 ```
+-----
 
 `create.blade.php`:
 ```html
@@ -390,6 +385,7 @@ ______
 </div><!-- /.page-content -->        
 @endsection
 ```
+_____
 
 `edit.blade.php`:
 ```html
@@ -433,21 +429,17 @@ ______
 									value="{{ old('topic_name', $crud1->topic_name) }}" required>
 							</div>
 
-							
 							<div class="form-group">
 								<label for="name">Title</label>
 								<input type="text" name="title" class="form-control"
 									value="{{ old('title', $crud1->title) }}" required>
 							</div>
-
 							
 							<div class="form-group">
 								<label for="name">Description</label>
 								<input type="text" name="description" class="form-control"
 									value="{{ old('description', $crud1->description) }}" required>
 							</div>
-
-							
 
 							<div class="form-group">
 								<label for="status">Status</label><br>
@@ -462,7 +454,6 @@ ______
 										{{ $crud1->status == 'inactive' ? 'checked' : '' }}> Inactive
 								</label>
 							</div>
-
 
 							<div class="form-actions center">
 								<button type="submit" class="btn btn-sm btn-success">

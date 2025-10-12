@@ -16,7 +16,7 @@ Laravel -এ CRUD Operation এর জন্য ৫টি Step Follow করত�
 ```
 ____
 
-## Step-1: (Route Create)
+## Step-1: (Web Route)
 
 `routes/web.php`:
 ```php
@@ -29,7 +29,7 @@ Route::group(['prefix' => 'dashboard', 'as' => 'dashboard.'], function () {
 });
 ```
 _____
-## Step-2:
+## Step-2: (Model)
 
 `app\Models\Crud7.php`:
 ```php
@@ -66,7 +66,7 @@ class Crud7 extends Model
 }
 ```
 ____
-## Step-3:
+## Step-3: (Migration)
 
 `database\migrations\2025_05_05_100447_create_crud7s_table.php`:
 ```php
@@ -80,7 +80,7 @@ ____
 	});
 ```
 _____
-## Step-4:
+## Step-4: (Controller)
 
 `app\Http\Controllers\Crud7Controller.php`:
 ```php
@@ -167,9 +167,9 @@ class Crud7Controller extends Controller
 ```
 ______
 
-## Step-5:
+## Step-5: (Form Request)
 
-**`app\Http\Requests\Crud4Request.php:`**
+**`app\Http\Requests\Crud7Request.php:`**
 ```php
 class Crud7Request extends FormRequest
 {
@@ -221,7 +221,9 @@ class Crud7Request extends FormRequest
     }
 }
 ```
-## Step-6:
+___
+
+## Step-6: (View Created)
 
 `index.blade.php`:
 ```html
@@ -358,6 +360,7 @@ class Crud7Request extends FormRequest
 </div>
 @endsection
 ```
+____
 
 `create.blade.php`:
 ```html
@@ -524,15 +527,10 @@ class Crud7Request extends FormRequest
     nameInput.addEventListener('input', function() {
     // same slug generation logic
     });
-
-
   </script>
-
-
 @endpush
-
-
 ```
+___
 
 `edit.blade.php`:
 ```html
