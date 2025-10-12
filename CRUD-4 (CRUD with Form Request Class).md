@@ -12,7 +12,7 @@ Laravel -এ CRUD Operation এর জন্য ৫টি Step Follow করত�
 
 #### **Workflow**:
 ```scss
-		(Route → Controller → FormRequest → Model → View)
+					(Route → Middleware (if any) → Controller → FormRequest → Model → View)
 ```
 ____
 
@@ -32,7 +32,7 @@ Route::group(['prefix' => 'dashboard', 'as' => 'dashboard.'], function () {
 _____
 ## Step-2:
 
-`app\Models\Crud0.php`:
+`app\Models\Crud4.php`:
 ```php
 class Crud4 extends Model
 {
@@ -48,7 +48,7 @@ class Crud4 extends Model
 ____
 ## Step-3:
 
-`database\migrations\2025_05_05_100447_create_crud0s_table.php`:
+`database\migrations\2025_05_05_100447_create_crud4s_table.php`:
 ```php
 public function up(): void
     {
@@ -64,7 +64,7 @@ public function up(): void
 _____
 ## Step-4:
 
-`app\Http\Controllers\Crud0Controller.php`:
+`app\Http\Controllers\Crud4Controller.php`:
 ```php
 class Crud4Controller extends Controller
 {
