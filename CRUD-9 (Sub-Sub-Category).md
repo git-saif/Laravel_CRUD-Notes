@@ -1,5 +1,5 @@
 
-Laravel -এ CRUD Operation এর জন্য ৫টি Step Follow করতে হয়। সেগুলো হলোঃ
+Laravel -এ CRUD Operation এর জন্য ৬টি Step Follow করতে হয়। সেগুলো হলোঃ
 
 1. Routes               =>  `routes\web.php`
 2. Model                => `app\Models\Crud9.php`
@@ -26,7 +26,7 @@ Route::group(['prefix' => 'dashboard', 'as' => 'dashboard.'], function () {
     
         'crud-9' => Crud9Controller::class,  // Sub-Sub-Category
     ]);
-    // Ajax endpoint to get subcategories for a category
+    // Ajax route to get subcategories for a category [This route use only when we use ajax rendering system]
     Route::get('crud-9/subcategories/{category}', [Crud9Controller::class, 'getSubcategories'])
         ->name('crud-9.subcategories');
 });
