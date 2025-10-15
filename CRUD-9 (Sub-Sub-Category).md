@@ -18,7 +18,7 @@ ____
 
 ## Step-1: (Web Route)
 
-`routes/web.php`:
+##### `routes/web.php`:
 ```php
 Route::group(['prefix' => 'dashboard', 'as' => 'dashboard.'], function () {
 
@@ -34,7 +34,7 @@ Route::group(['prefix' => 'dashboard', 'as' => 'dashboard.'], function () {
 _____
 ## Step-2: (Model)
 
-`app\Models\Crud9.php`:
+##### `app\Models\Crud9.php`:
 ```php
 class Crud9 extends Model
 {
@@ -72,7 +72,7 @@ class Crud9 extends Model
 ____
 ## Step-3: (Migration)
 
-`database\migrations\2025_05_05_100447_create_crud9s_table.php`:
+##### `database\migrations\2025_05_05_100447_create_crud9s_table.php`:
 ```php
 	Schema::create('crud9s', function (Blueprint $table) {
 		$table->id();
@@ -90,7 +90,7 @@ _____
 
 #### **Using Server Side Rendering :**
 
-**`app\Http\Requests\Crud9Request.php:`**
+##### **`app\Http\Requests\Crud9Request.php:`**
 ```php
 class Crud9Controller extends Controller
 {
@@ -192,7 +192,8 @@ class Crud9Controller extends Controller
 ----
 
 #### **Using Ajax Rendering :**
-`app\Http\Controllers\Crud9Controller.php`:
+
+##### `app\Http\Controllers\Crud9Controller.php`:
 ```php
 class Crud9Controller extends Controller
 {
@@ -207,7 +208,7 @@ class Crud9Controller extends Controller
     public function create()
     {
         // Load categories
-        $categories = Crud7::orderBy('name')->get();
+        $categories = Crud7::where('status', 'active')->orderBy('name')->get();
 
         // Load subcategories by AJAX
         $subcategories = collect();
@@ -221,6 +222,7 @@ class Crud9Controller extends Controller
     public function getSubcategories($categoryId)
     {
         $subcategories = Crud8::where('crud7_id', $categoryId)
+	        ->where('status', 'active')
             ->orderBy('name')
             ->get(['id', 'name']);
 
@@ -249,8 +251,11 @@ class Crud9Controller extends Controller
     {
         try {
             $crud9 = Crud9::findOrFail($id);
-            $categories = Crud7::orderBy('name')->get();
-            $subcategories = Crud8::where('crud7_id', $crud9->category_id ?? $crud9->subcategory->crud7_id ?? 0)
+            $categories = Crud7::
+	            where('status', 'active')->orderBy('name')->get();
+            $subcategories = Crud8::where
+	            ('status', 'active')
+	            ->where('crud7_id', $crud9->category_id ?? $crud9->subcategory->crud7_id ?? 0)
                 ->orderBy('name')->get();
 
             return view('components.CRUD-9.edit', compact('crud9', 'categories', 'subcategories'));
@@ -293,7 +298,7 @@ ______
 ## Step-5: (Form Request)
 
 
-**`app\Http\Requests\Crud9Request.php:`**
+##### **`app\Http\Requests\Crud9Request.php:`**
 ```php
 class Crud9Request extends FormRequest
 {
@@ -373,7 +378,7 @@ class Crud9Request extends FormRequest
 
 #### **Using Server Side Rendering :**
 
-`index.blade.php`: (form only)
+##### `index.blade.php`: (form only)
 ```html
 <div>
 	<table id="dynamic-table" class="table table-striped table-bordered table-hover">
@@ -445,7 +450,7 @@ class Crud9Request extends FormRequest
 ```
 ---
 
-`create.blade.php`: (form only)
+##### `create.blade.php`: (form only)
 ```html
 <!-- Form Start -->
 <form action="{{ route('dashboard.crud-9.store') }}" method="POST">
@@ -531,7 +536,7 @@ class Crud9Request extends FormRequest
 ```
 ___
 
-`edit.blade.php`: (form only)
+##### `edit.blade.php`: (form only)
 ```html
 <!-- Edit Form Start -->
 <form action="{{ route('dashboard.crud-9.update', $crud9->id) }}" method="POST" enctype="multipart/form-data">
@@ -623,7 +628,7 @@ ____
 
 #### **Using Ajax Rendering :**
 
-`index.blade.php`:
+##### `index.blade.php`:
 ```html
 @extends('layouts.app')
 @section('content')
@@ -761,8 +766,9 @@ ____
 </div>
 @endsection
 ```
+____
 
-`create.blade.php`:
+##### `create.blade.php`:
 ```html
 @extends('layouts.app')
 @section('content')
@@ -966,6 +972,9 @@ ____
           populateSubcategories([]);
           return;
         }
+        
+        // 🔹 Show loading message before request
+        $sub.html('<option value="">-- Loading... --</option>').prop('disabled', true);
 
         $.getJSON('{{ route("dashboard.crud-9.subcategories", ":id") }}'.replace(':id', categoryId))
           .done(data => populateSubcategories(data))
@@ -985,8 +994,9 @@ ____
   </script>
 @endpush
 ```
+_____
 
-`edit.blade.php`:
+##### `edit.blade.php`:
 ```html
 @extends('layouts.app')
 @section('content')
@@ -1161,6 +1171,9 @@ ____
         populateSubcategories([]);
         return;
       }
+      
+      // 🔹 Show loading message before request
+        $sub.html('<option value="">-- Loading... --</option>').prop('disabled', true);
 
       $.getJSON('{{ route("dashboard.crud-9.subcategories", ":id") }}'.replace(':id', catId))
         .done(data => populateSubcategories(data))

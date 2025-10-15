@@ -18,7 +18,7 @@ ____
 
 ## Step-1: (Web Route)
 
-`routes/web.php`:
+##### `routes/web.php`:
 ```php
 Route::group(['prefix' => 'dashboard', 'as' => 'dashboard.'], function () {
 
@@ -31,7 +31,7 @@ Route::group(['prefix' => 'dashboard', 'as' => 'dashboard.'], function () {
 _____
 ## Step-2: (Model)
 
-`app\Models\Crud8.php`:
+##### `app\Models\Crud8.php`:
 ```php
 class Crud8 extends Model
 {
@@ -77,7 +77,7 @@ class Crud8 extends Model
 ____
 ## Step-3: (Migration)
 
-`database\migrations\2025_05_05_100447_create_crud8s_table.php`:
+##### `database\migrations\2025_05_05_100447_create_crud8s_table.php`:
 ```php
 	Schema::create('crud8s', function (Blueprint $table) {
 		$table->id();
@@ -92,19 +92,19 @@ ____
 _____
 ## Step-4: (Controller)
 
-`app\Http\Controllers\Crud8Controller.php`:
+##### `app\Http\Controllers\Crud8Controller.php`:
 ```php
 class Crud8Controller extends Controller
 {
     public function index()
     {
-        $crud8 = Crud8::with('category')->orderBy('id', 'asc')->paginate(3);
+        $crud8 = Crud8::with('category')->orderBy('serial_no', 'asc')->paginate(3);
         return view('components.CRUD-8.index', compact('crud8'));
     }
 
     public function create()
     {
-        $categories = Crud7::orderBy('serial_no')->get();
+        $categories = Crud7::where('status', 'active')->orderBy('serial_no')->get();
         return view('components.CRUD-8.create', compact('categories'));
     }
 
@@ -130,7 +130,7 @@ class Crud8Controller extends Controller
     {
         try {
             $crud8 = Crud8::findOrFail($id);
-            $categories = Crud7::orderBy('name')->get();
+            $categories = Crud7::where('status', 'active')->orderBy('serial_no')->get();
             return view('components.CRUD-8.edit', compact('crud8', 'categories'));
         } catch (\Throwable $th) {
             return redirect()->back()->with('error', 'Something went wrong: ' . $th->getMessage());
@@ -164,7 +164,7 @@ ______
 
 ## Step-5: (Form Request)
 
-**`app\Http\Requests\Crud8Request.php:`**
+##### **`app\Http\Requests\Crud8Request.php:`**
 ```php
 class Crud8Request extends FormRequest
 {
@@ -242,7 +242,7 @@ class Crud8Request extends FormRequest
 
 ## Step-6: (View Create)
 
-`index.blade.php`:
+##### `index.blade.php`:
 ```html
 @extends('layouts.app')
 @section('content')
@@ -382,7 +382,7 @@ class Crud8Request extends FormRequest
 ```
 -----
 
-`create.blade.php`:
+##### `create.blade.php`:
 ```html
 @extends('layouts.app')
 @section('content')
@@ -565,7 +565,7 @@ class Crud8Request extends FormRequest
 ```
 ----
 
-`edit.blade.php`:
+##### `edit.blade.php`:
 ```html
 @extends('layouts.app')
 @section('content')

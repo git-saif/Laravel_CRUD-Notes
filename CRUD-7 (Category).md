@@ -18,7 +18,7 @@ ____
 
 ## Step-1: (Web Route)
 
-`routes/web.php`:
+##### `routes/web.php`:
 ```php
 Route::group(['prefix' => 'dashboard', 'as' => 'dashboard.'], function () {
 
@@ -31,7 +31,7 @@ Route::group(['prefix' => 'dashboard', 'as' => 'dashboard.'], function () {
 _____
 ## Step-2: (Model)
 
-`app\Models\Crud7.php`:
+##### `app\Models\Crud7.php`:
 ```php
 class Crud7 extends Model
 {
@@ -68,7 +68,7 @@ class Crud7 extends Model
 ____
 ## Step-3: (Migration)
 
-`database\migrations\2025_05_05_100447_create_crud7s_table.php`:
+##### `database\migrations\2025_05_05_100447_create_crud7s_table.php`:
 ```php
 	Schema::create('crud7s', function (Blueprint $table) {
 		$table->id();
@@ -82,7 +82,7 @@ ____
 _____
 ## Step-4: (Controller)
 
-`app\Http\Controllers\Crud7Controller.php`:
+##### `app\Http\Controllers\Crud7Controller.php`:
 ```php
 class Crud7Controller extends Controller
 {
@@ -169,7 +169,7 @@ ______
 
 ## Step-5: (Form Request)
 
-**`app\Http\Requests\Crud7Request.php:`**
+##### **`app\Http\Requests\Crud7Request.php:`**
 ```php
 class Crud7Request extends FormRequest
 {
@@ -225,7 +225,7 @@ ___
 
 ## Step-6: (View Created)
 
-`index.blade.php`:
+##### `index.blade.php`:
 ```html
 @extends('layouts.app')
 @section('content')
@@ -362,7 +362,7 @@ ___
 ```
 ____
 
-`create.blade.php`:
+##### `create.blade.php`:
 ```html
 @extends('layouts.app')
 @section('content')
@@ -532,7 +532,7 @@ ____
 ```
 ___
 
-`edit.blade.php`:
+##### `edit.blade.php`:
 ```html
 @extends('layouts.app')
 
