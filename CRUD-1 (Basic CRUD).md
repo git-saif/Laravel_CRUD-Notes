@@ -15,7 +15,7 @@ Laravel -এ CRUD Operation এর জন্য ৫টি Step Follow করত�
 ____
 ## Step-1: (Web Route)
 
-`routes/web.php`:
+##### `routes/web.php`:
 ```php
 Route::get('/dashboard', function () {
     return view('components.dashboard');
@@ -42,7 +42,7 @@ _____
 	php artisan make:model Crud-1 -m
 ```
 
-`app\Models\Crud1.php`:
+##### `app\Models\Crud1.php`:
 ```php
 class Crud1 extends Model
 {
@@ -54,7 +54,7 @@ class Crud1 extends Model
 ____
 ## Step-3: (Migration)
 
-`database\migrations\2025_05_05_100447_create_crud1s_table.php`:
+##### `database\migrations\2025_05_05_100447_create_crud1s_table.php`:
 ```php
 	Schema::create('crud1s', function (Blueprint $table) {
 		$table->id();
@@ -68,7 +68,7 @@ ____
 _____
 ## Step-4: (Controller)
 
-`app\Http\Controllers\Crud1Controller.php`:
+##### `app\Http\Controllers\Crud1Controller.php`:
 ```php
 class Crud1Controller extends Controller
 {
@@ -159,7 +159,7 @@ class Crud1Controller extends Controller
 ______
 ## Step-5: (View Create)
 
-`index.blade.php`:
+##### `index.blade.php`:
 ```html
 @extends('layouts.app')
 
@@ -280,7 +280,7 @@ ______
 ```
 -----
 
-`create.blade.php`:
+##### `create.blade.php`:
 ```html
 @extends('layouts.app')
 @section('content')
@@ -387,7 +387,7 @@ ______
 ```
 _____
 
-`edit.blade.php`:
+##### `edit.blade.php`:
 ```html
 @extends('layouts.app')
 @section('content')

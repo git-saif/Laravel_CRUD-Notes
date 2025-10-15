@@ -14,7 +14,7 @@ Laravel -এ CRUD with Image / File Operation এর জন্যও ৫টি S
 ____
 ## Step-1: (Web Route)
 
-`routes/web.php`:
+##### `routes/web.php`:
 ```php
 Route::get('/dashboard', function () {
     return view('components.dashboard');
@@ -44,7 +44,7 @@ php artisan make:model Crud2 -m
 ```
 
 2. Update Code
-`app\Models\Crud2.php`: (Model)
+##### `app\Models\Crud2.php`: (Model)
 ```php
 class Crud extends Model
 {
@@ -57,7 +57,7 @@ _____
 
 ## Step-3: (Migration)
 
- `database\migrations\2025_04_14_164123_create_crud2s_table.php`:
+ ##### `database\migrations\2025_04_14_164123_create_crud2s_table.php`:
 ```php
 public function up(): void
     {
@@ -76,7 +76,7 @@ ____
 
 ## Step-4: (Controller)
 
-`app\Http\Controllers\Crud2Controller.php`: (Controller)
+##### `app\Http\Controllers\Crud2Controller.php`: (Controller)
 ```php
 class CrudController extends Controller
 {
@@ -209,7 +209,7 @@ ______
 
 ## Step-5: (Create View)
 
-`index.blade.php`:
+##### `index.blade.php`:
 ```html
 @extends('layouts.app')
 
@@ -375,7 +375,7 @@ ______
 ```
 ____
 
-`create.blade.php`:
+##### `create.blade.php`:
 ```html
 @extends('layouts.app')
 
@@ -515,7 +515,7 @@ ____
 ```
 _______
 
-`edit.blade.php`:
+##### `edit.blade.php`:
 ```html
 @extends('layouts.app')
 

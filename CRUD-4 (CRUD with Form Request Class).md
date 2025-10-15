@@ -18,7 +18,7 @@ ____
 
 ## Step-1: (Web Route)
 
-`routes/web.php`:
+##### `routes/web.php`:
 ```php
 Route::group(['prefix' => 'dashboard', 'as' => 'dashboard.'], function () {
 
@@ -30,9 +30,9 @@ Route::group(['prefix' => 'dashboard', 'as' => 'dashboard.'], function () {
 });
 ```
 _____
-## Step-2:
+## Step-2: (Model)
 
-`app\Models\Crud4.php`:
+##### `app\Models\Crud4.php`:
 ```php
 class Crud4 extends Model
 {
@@ -46,9 +46,9 @@ class Crud4 extends Model
 }
 ```
 ____
-## Step-3:
+## Step-3: (Migration)
 
-`database\migrations\2025_05_05_100447_create_crud4s_table.php`:
+##### `database\migrations\2025_05_05_100447_create_crud4s_table.php`:
 ```php
 public function up(): void
     {
@@ -62,9 +62,9 @@ public function up(): void
     }
 ```
 _____
-## Step-4:
+## Step-4: (Controller)
 
-`app\Http\Controllers\Crud4Controller.php`:
+##### `app\Http\Controllers\Crud4Controller.php`:
 ```php
 class Crud4Controller extends Controller
 {
@@ -131,9 +131,9 @@ class Crud4Controller extends Controller
 ```
 ______
 
-## Step-5:
+## Step-5: (Form Request)
 
-**`app\Http\Requests\Crud4Request.php:`**
+##### **`app\Http\Requests\Crud4Request.php:`**
 ```php
 class Crud4Request extends FormRequest
 {
@@ -194,9 +194,9 @@ class Crud4Request extends FormRequest
     }
 }
 ```
-## Step-6:
+## Step-6: (View Create)
 
-`index.blade.php`:
+##### `index.blade.php`:
 ```html
 <div>
 	<table id="dynamic-table" class="table table-striped table-bordered table-hover">
@@ -256,8 +256,9 @@ class Crud4Request extends FormRequest
 	</div>
 </div>
 ```
+_____
 
-`create.blade.php`:
+##### `create.blade.php`:
 ```html
 <div class="widget-body">
 	<div class="widget-main">
@@ -334,8 +335,9 @@ class Crud4Request extends FormRequest
 	</div>
   </div>
 ```
+______
 
-`edit.blade.php`:
+##### `edit.blade.php`:
 ```html
 <div class="widget-body">
 	<div class="widget-main">

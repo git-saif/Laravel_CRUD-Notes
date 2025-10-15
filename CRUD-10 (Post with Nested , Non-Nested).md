@@ -25,7 +25,7 @@ ____
 
 ## Step-1: (Web Route)
 
-`routes/web.php`:
+##### `routes/web.php`:
 ```php
 Route::group(['prefix' => 'dashboard', 'as' => 'dashboard.'], function () {
 
@@ -39,7 +39,7 @@ Route::group(['prefix' => 'dashboard', 'as' => 'dashboard.'], function () {
 _____
 ## Step-2: (Model)
 
-`app\Models\Crud10.php`:
+##### `app\Models\Crud10.php`:
 ```php
 class Crud10 extends Model
 {
@@ -76,7 +76,7 @@ class Crud10 extends Model
 ____
 ## Step-3: (Migration)
 
-`database\migrations\2025_05_05_100447_create_crud10s_table.php`:
+##### `database\migrations\2025_05_05_100447_create_crud10s_table.php`:
 ```php
 	Schema::create('crud10s', function (Blueprint $table) {
 		$table->id();
@@ -101,7 +101,7 @@ _____
 
 #### **Using Server Side Rendering :**
 
-**`app\Http\Requests\Crud10Request.php:`**
+##### **`app\Http\Requests\Crud10Request.php:`**
 ```php
 class Crud10Controller extends Controller
 {
@@ -205,7 +205,7 @@ class Crud10Controller extends Controller
 
 #### **Using Ajax Rendering :**
 
-`app\Http\Controllers\Crud10Controller.php`:
+##### `app\Http\Controllers\Crud10Controller.php`:
 ```php
 class Crud10Controller extends Controller
 {
@@ -223,7 +223,7 @@ class Crud10Controller extends Controller
     {
         try {
             // All category
-            $categories = Crud7::orderBy('name')->get();
+            $categories = Crud7::where('status', 'active')->orderBy('name')->get();
 
             // sub-categories & sub-sub-categories will be loaded by AJAX
             $subcategories = collect();
@@ -249,6 +249,7 @@ class Crud10Controller extends Controller
     public function getSubcategories($categoryId)
     {
         $subcategories = Crud8::where('crud7_id', $categoryId)
+	        ->where('status', 'active')
             ->select('id', 'name')
             ->orderBy('name')
             ->get();
@@ -259,6 +260,7 @@ class Crud10Controller extends Controller
     public function getSubSubcategories($subcategoryId)
     {
         $subsubcategories = Crud9::where('crud8_id', $subcategoryId)
+	        ->where('status', 'active')
             ->select('id', 'name')
             ->orderBy('name')
             ->get();
@@ -297,7 +299,7 @@ class Crud10Controller extends Controller
     {
         try {
             $crud10 = Crud10::findOrFail($id);
-            $categories = Crud7::orderBy('name')->get();
+            $categories = Crud7::where('status', 'active')->orderBy('serial_no')->get();
 
             // শুধু category গুলো পাঠাও — subcategory/sub-subcategory ajax দিয়ে আসবে
             return view('components.CRUD-10.edit', compact('crud10', 'categories'));
@@ -343,7 +345,7 @@ ______
 ## Step-5: (Form Request)
 
 
-**`app\Http\Requests\Crud10Request.php:`**
+##### **`app\Http\Requests\Crud10Request.php:`**
 ```php
 class Crud10Request extends FormRequest
 {
@@ -411,7 +413,7 @@ class Crud10Request extends FormRequest
 
 #### **Using Server Side Rendering :**
 
-`index.blade.php`: (form only)
+##### `index.blade.php`: (form only)
 ```html
 @extends('layouts.app')
 @section('content')
@@ -555,7 +557,7 @@ class Crud10Request extends FormRequest
 ```
 ---
 
-`create.blade.php`: (form only)
+##### `create.blade.php`: (form only)
 ```html
 @extends('layouts.app')
 @section('content')
@@ -768,7 +770,7 @@ class Crud10Request extends FormRequest
 ```
 ___
 
-`edit.blade.php`: (form only)
+##### `edit.blade.php`: (form only)
 ```html
 @extends('layouts.app')
 @section('content')
@@ -926,12 +928,13 @@ ____
 
 #### **Using Ajax Rendering :**
 
-`index.blade.php`:
+##### `index.blade.php`:
 ```scss
 	Same as like server side rendering index view.
 ```
+___
 
-`create.blade.php`:
+##### `create.blade.php`:
 ```html
 @extends('layouts.app')
 @section('content')
@@ -1191,8 +1194,9 @@ ____
 </script>
 @endpush
 ```
+_____
 
-`edit.blade.php`:
+##### `edit.blade.php`:
 ```html
 @extends('layouts.app')
 @section('content')
@@ -1431,7 +1435,7 @@ ____
 ```
 _____
 
-`show.blade.php`:
+##### `show.blade.php`:
 ```html
 @extends('layouts.app')
 
