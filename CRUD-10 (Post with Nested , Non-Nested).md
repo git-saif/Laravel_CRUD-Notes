@@ -1230,10 +1230,20 @@ _____
                 <div class="widget-header widget-header-flat " style="background-color: #618f8f;">
                   <h4 class="widget-title" style="color: #fff;">Edit Post</h4>
 
+
                   <span class="widget-toolbar">
-                    <a href="{{ route('dashboard.crud-9.index') }}" style="color: #fff;">
-                      <i class="ace-icon fa fa-list"></i> Back to List
+	                {{-- Dynamic Back Button --}}
+                    @if (request()->query('from') === 'show')
+                    {{-- যদি show থেকে আসে --}}
+                    <a href="{{ route('dashboard.crud-10.show', $crud10->id) }}" style="color: #fff;">
+                      <i class="fa fa-arrow-left"></i> Back to Show
                     </a>
+                    @else
+                    {{-- অন্যথায় index এ ফিরে যাবে --}}
+                    <a href="{{ route('dashboard.crud-10.index') }}" style="color: #fff;">
+                      <i class="fa fa-arrow-left"></i> Back to Index
+                    </a>
+                    @endif
                   </span>
                 </div>
 
@@ -1480,7 +1490,10 @@ _____
               </a>
 
                 <!-- Back Button -->
-                <a href="{{ route('dashboard.crud-10.index') }}" style="color: #fff; margin-right: 10px;  border-left: 1px solid #fff;">
+                <a href="{{ route('dashboard.crud-10.index') }}?from=show" style=" color: #fff; margin-right: 10px; border-left: 1px solid #fff;">
+
+                  <i class="ace-icon fa fa-arrow-left" style="margin-left: 5px;"></i> Back to List
+                </a>
                   <i class="ace-icon fa fa-arrow-left" style="margin-left: 5px;"></i> Back to List
                 </a>
               </span>
