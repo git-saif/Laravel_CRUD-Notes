@@ -1,27 +1,10 @@
-এই CRUD এ আমরা Nested / Non-Nested দুইভাবেই পোষ্ট করতে পারবো। এর কার্যপদ্ধতি নিম্নরূপঃ
-
-```scss
-				category -> Post (minimum cate এর অধীনে পোষ্ট করতে হবে।) 
-				category -> sub-category -> Post
-				category -> sub-sub-category -> Post
-```
-
-Laravel -এ এই CRUD Operation এর জন্য ৬টি Step Follow করতে হয়। সেগুলো হলোঃ
+এই Editor use করে আমরা Blog পোষ্ট করতে পারবো। যেখানে Text formatting, Image add from website করতে পারবো। এ জন্য ৬টি Step Follow করতে হয়। সেগুলো হলোঃ
 
 1. Routes               =>  `routes\web.php`
-2. Model                => `app\Models\Crud10.php`
-3. Migration          => `database\migrations\2025_04_14_164123_create_crud10s_table.php`
-4. Controller         => `app\Http\Controllers\Crud10Controller.php`
-5. Request form   =>  `app\Http\Requests\Crud10Request.php`
-6. Views                =>  `index.blade.php` , `create.blade.php` , `edit.blade.php`
+2. Controller         => `app\Http\Controllers\Crud10Controller.php`
+3. Views                =>  `show.blade.php` , `create.blade.php` , `edit.blade.php`
    
 নিচে এগুলোর বিস্তারিত বর্ণনা দেয়া হলোঃ
-
-#### **Workflow**:
-```scss
-						(Route → Middleware (if any) → Controller → FormRequest → Model → View)
-```
-____
 
 ## Step-1: (Web Route)
 
@@ -76,7 +59,7 @@ _____
 ```
 ----
 
-## Step-6: (View Create)
+## Step-3: (Post View Form Edit)
 
 ##### `show.blade.php`: (form only)
 ```html
