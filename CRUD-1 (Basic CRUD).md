@@ -20,13 +20,11 @@ ____
 Route::get('/dashboard', function () {
     return view('components.dashboard');
 })->name('dashboard');
-
 /*
 |--------------------------------------------------------------------------
 | Resource Routes.
 |--------------------------------------------------------------------------
 */
-
 Route::group(['prefix' => 'dashboard', 'as' => 'dashboard.'], function () {
 
     Route::resources([
@@ -47,7 +45,6 @@ _____
 class Crud1 extends Model
 {
     use HasFactory;
-
     protected $guarded = [];
 }
 ```
@@ -92,24 +89,15 @@ class Crud1Controller extends Controller
                 'description' => 'required',
                 'status'      => 'required',
             ]);
-            
             Crud1::create($validated);
-            
             return redirect()
 	            ->route('dashboard.crud-1.index')
 	            ->with('success', 'Data successfully stored.');
-
-
         } catch (\Throwable $e) {
             return redirect()
 	            ->back()
 	            ->with('error', 'Something went wrong: ' . $e->getMessage());
         }
-    }
-
-    public function show(string $id)
-    {
-        //
     }
 
     public function edit(string $id)
@@ -129,12 +117,10 @@ class Crud1Controller extends Controller
                 'description' => 'required',
                 'status'      => 'required',
             ]);
-
             $crud1->update($validated);
             return redirect()
 	            ->route('dashboard.crud-1.index')
 	            ->with('success', 'Data successfully updated.');
-
         } catch (\Throwable $th) {
             //throw $th;
         }
@@ -176,7 +162,6 @@ ______
 			</small>
 		</h1>
 	</div>
-
 	<div class="row">
 		<div class="col-xs-12">
 			<!-- PAGE CONTENT BEGINS -->
@@ -223,14 +208,15 @@ ______
 										<td> {{ $item->topic_name ?? '' }} </td>
 										<td> {{ $item->title ?? '' }} </td>
 										<td> {{ $item->description ?? '' }} </td>
-										
 										<td>
 											@if ($item->status == 'active')
 												<span
-													class="label label-sm label-success arrowed-in">Active</span>
+													class="label label-sm 
+													label-success arrowed-in">Active</span>
 											@else
 												<span
-													class="label label-sm label-danger arrowed-in">Inactive</span>
+													class="label label-sm
+													label-danger arrowed-in">Inactive</span>
 											@endif
 										</td>
 										<td>
@@ -244,10 +230,10 @@ ______
 													<i class="ace-icon fa fa-pencil bigger-130"></i>
 												</a>
 
-												<form action="{{ route('dashboard.crud-1.destroy', $item->id) }}"
+												<form action="{{ route('dashboard.crud-1.destroy', 
+													$item->id) }}"
 													method="POST" style="display:inline;"
-													onsubmit="return confirm('Are you sure you want to delete this item?');">
-
+													onsubmit="return confirm('Delete Confirmed?');">
 													@csrf
 													@method('DELETE')
 													<button type="submit" class="red"
@@ -255,7 +241,6 @@ ______
 														<i class="ace-icon fa fa-trash-o bigger-130"></i>
 													</button>
 												</form>
-
 											</div>
 										</td>
 									</tr>
@@ -266,7 +251,6 @@ ______
 								@endforelse
 							</tbody>
 						</table>
-
 						<div class="text-center">
 							{{ $crud1->links('pagination::bootstrap-4') }}
 						</div>
@@ -279,14 +263,12 @@ ______
 @endsection
 ```
 -----
-
 ##### `create.blade.php`:
 ```html
 @extends('layouts.app')
 @section('content')
 @section('title', 'Smart ERP - CRUD')
 <div class="page-content">
-
 	<div class="page-header">
 		<h1>
 			Tables
@@ -296,13 +278,10 @@ ______
 			</small>
 		</h1>
 	</div>
-
 	<div class="row">
 		<div class="col-xs-12">
+		
 			<!-- PAGE CONTENT BEGINS -->
-
-
-
 			<div class="row">
 				<div class="col-xs-12 ">
 					<div class="col-md-2"></div>
@@ -320,12 +299,11 @@ ______
 								</a>
 							</span>
 						</div>
-
 						<!-- div.table-responsive -->
 
 						<!-- div.dataTables_borderWrap -->
 						<form action="{{ route('dashboard.crud-1.store') }}" method="POST"
-							enctype="multipart/form-data">
+							  enctype="multipart/form-data">
 							@csrf
 
 							<div class="form-group">
@@ -334,7 +312,6 @@ ______
 									placeholder="Enter Topic Name Here" required>
 							</div>
 
-							
 							<div class="form-group">
 								<label for="title">Title</label>
 								<input type="text" name="title" class="form-control"
@@ -346,7 +323,6 @@ ______
 								<input type="text" name="description" class="form-control"
 									placeholder="Enter Description" required>
 							</div>
-
 
 							<div class="form-group">
 								<label for="status">Status</label><br>
@@ -360,7 +336,6 @@ ______
 								</label>
 							</div>
 
-
 							<div class="form-actions center">
 								<button type="submit" class="btn btn-sm btn-success">
 									Save
@@ -373,12 +348,11 @@ ______
 
 							</div>
 						</form>
-						{{-- ফর্ম শেষ --}}
+						{{-- Main Form End --}}
 					</div>
 					<div class="col-md-2"></div>
 				</div>
 			</div>
-
 			<!-- PAGE CONTENT ENDS -->
 		</div><!-- /.col -->
 	</div>
@@ -386,7 +360,6 @@ ______
 @endsection
 ```
 _____
-
 ##### `edit.blade.php`:
 ```html
 @extends('layouts.app')
@@ -399,17 +372,14 @@ _____
 			<small><i class="ace-icon fa fa-angle-double-right"></i> Update Existing Data</small>
 		</h1>
 	</div>
-
 	<div class="row">
 		<div class="col-xs-12">
 			<div class="row">
 				<div class="col-xs-12 ">
 					<div class="col-md-2"></div>
-
 					<div class="col-md-8">
 						<div class="widget-header widget-header-flat " style="background-color: #618f8f;">
 							<h4 class="widget-title" style="color: #fff;">Edit Data</h4>
-
 							<span class="widget-toolbar">
 								<a href="{{ route('dashboard.crud.index') }}" style="color: #fff;">
 									<i class="ace-icon fa fa-list"></i> Back to List
