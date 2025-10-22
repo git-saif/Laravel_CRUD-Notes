@@ -1,4 +1,4 @@
-এই Editor use করে আমরা Blog পোষ্ট করতে পারবো। যেখানে Text formatting, Image add from website করতে পারবো। এ জন্য ৬টি Step Follow করতে হয়। সেগুলো হলোঃ
+এই Editor use করে আমরা Blog পোষ্ট করতে পারবো। যেখানে Text formatting, Image add from website করতে পারবো। এ জন্য extra 3টি Step Follow করতে হয়। সেগুলো হলোঃ
 
 1. Routes               =>  `routes\web.php`
 2. Controller         => `app\Http\Controllers\Crud10Controller.php`
