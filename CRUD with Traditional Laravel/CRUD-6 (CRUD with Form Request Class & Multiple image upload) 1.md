@@ -105,11 +105,6 @@ class Crud6Controller extends Controller
         return redirect()->route('dashboard.crud-6.index')->with('success', 'Data saved successfully!');
     }
 
-    public function show(string $id)
-    {
-        //
-    }
-
     public function edit(string $id)
     {
         $crud6 = Crud6::findOrFail($id);
@@ -155,10 +150,10 @@ class Crud6Controller extends Controller
             }
 
             $crud6->update([
-                'name' => $request->name,
-                'email' => $request->email,
-                'phone' => $request->phone,
-                'image' => json_encode($updatedImages),
+                'name'   => $request->name,
+                'email'  => $request->email,
+                'phone'  => $request->phone,
+                'image'  => json_encode($updatedImages),
                 'status' => $request->status
             ]);
 
@@ -214,12 +209,12 @@ class Crud6Request extends FormRequest
     protected function storeRules(): array
     {
         return [
-            'name'   => 'required|string|max:255',
-            'email'  => 'required|email|unique:crud6s,email',
-            'phone'  => 'required|string|max:20|unique:crud6s,phone',
-            'image'  => 'required|array|min:1',
+            'name'    => 'required|string|max:255',
+            'email'   => 'required|email|unique:crud6s,email',
+            'phone'   => 'required|string|max:20|unique:crud6s,phone',
+            'image'   => 'required|array|min:1',
             'image.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
-            'status' => 'required|in:active,inactive',
+            'status'  => 'required|in:active,inactive',
         ];
     }
 
@@ -229,33 +224,33 @@ class Crud6Request extends FormRequest
         $id = $crud6?->id ?? $crud6;
 
         return [
-            'name'   => 'required|string|max:255',
-            'email'  => ['required', 'email', Rule::unique('crud6s', 'email')->ignore($id)],
-            'phone'  => ['required', 'string', 'max:20', Rule::unique('crud6s', 'phone')->ignore($id)],
-            'existing_images' => 'sometimes|array',
+            'name'              => 'required|string|max:255',
+            'email'             => ['required', 'email', Rule::unique('crud6s', 'email')->ignore($id)],
+            'phone'             => ['required', 'string', 'max:20', Rule::unique('crud6s', 'phone')->ignore($id)],
+            'existing_images'   => 'sometimes|array',
             'existing_images.*' => 'sometimes|string',
-            'delete_images' => 'sometimes|array',
-            'delete_images.*' => 'sometimes|string',
-            'replace_images' => 'sometimes|array',
-            'replace_images.*' => 'sometimes|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'new_images' => 'sometimes|array',
-            'new_images.*' => 'sometimes|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'status' => 'required|in:active,inactive',
+            'delete_images'     => 'sometimes|array',
+            'delete_images.*'   => 'sometimes|string',
+            'replace_images'    => 'sometimes|array',
+            'replace_images.*'  => 'sometimes|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'new_images'        => 'sometimes|array',
+            'new_images.*'      => 'sometimes|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'status'            => 'required|in:active,inactive',
         ];
     }
 
     public function messages(): array
     {
         return [
-            'name.required' => 'Please enter a name.',
+            'name.required'  => 'Please enter a name.',
             'email.required' => 'Email is required.',
-            'email.unique' => 'This email already exists.',
+            'email.unique'   => 'This email already exists.',
             'phone.required' => 'Phone number is required.',
-            'phone.unique' => 'This phone number already exists.',
+            'phone.unique'   => 'This phone number already exists.',
             'image.required' => 'Please upload at least one image.',
-            'image.*.image' => 'Each file must be an image.',
-            'image.*.mimes' => 'Allowed image formats: jpeg, png, jpg, gif.',
-            'image.*.max' => 'Image must not exceed 2MB.',
+            'image.*.image'  => 'Each file must be an image.',
+            'image.*.mimes'  => 'Allowed image formats: jpeg, png, jpg, gif.',
+            'image.*.max'    => 'Image must not exceed 2MB.',
         ];
     }
 }
