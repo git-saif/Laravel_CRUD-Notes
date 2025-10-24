@@ -1,5 +1,5 @@
 
-Laravel -এ CRUD Operation এর জন্য ৫টি Step Follow করতে হয়। সেগুলো হলোঃ
+Laravel -এ CRUD Operation এর জন্য 6টি Step Follow করতে হয়। সেগুলো হলোঃ
 
 1. Routes               =>  `routes\web.php`
 2. Model                => `app\Models\Crud6.php`
@@ -9,21 +9,17 @@ Laravel -এ CRUD Operation এর জন্য ৫টি Step Follow করত�
 6. Views                =>  `index.blade.php` , `create.blade.php` , `edit.blade.php`
    
 নিচে এগুলোর বিস্তারিত বর্ণনা দেয়া হলোঃ
-
 #### **Workflow**:
 ```scss
 					(Route → Middleware (if any) → Controller → FormRequest → Model → View)
 ```
 ____
-
 ## Step-1: (Web Route)
 
 ##### `routes/web.php`:
 ```php
 Route::group(['prefix' => 'dashboard', 'as' => 'dashboard.'], function () {
-
     Route::resources([
-
         // CRUD With Advance Validation 
         'crud-6' => Crud6Controller::class,
     ]);
@@ -193,7 +189,6 @@ class Crud6Controller extends Controller
 }
 ```
 ______
-
 ## Step-5: (Form Request)
 
 ##### **`app\Http\Requests\Crud6Request.php:`**
@@ -266,7 +261,6 @@ class Crud6Request extends FormRequest
 }
 ```
 ____
-
 ## Step-6: (View Create)
 
 ##### `index.blade.php`:
@@ -276,324 +270,175 @@ ____
 @section('title', 'CRUD6 - List')
 <!-- Table is here -->
 <div class="main-content">
-    <div class="main-content-inner">
-        <div class="breadcrumbs ace-save-state" id="breadcrumbs">
-            <ul class="breadcrumb">
-                <li>
-                    <i class="ace-icon fa fa-home home-icon"></i>
-                    <a href="#">Home</a>
-                </li>
-
-                <li>
-                    <a href="#">Tables</a>
-                </li>
-                <li class="active">CRUD6 List</li>
-            </ul><!-- /.breadcrumb -->
-
-            <div class="nav-search" id="nav-search">
-                <form class="form-search">
-                    <span class="input-icon">
-                        <input type="text" placeholder="Search ..." class="nav-search-input" id="nav-search-input"
-                            autocomplete="off" />
-                        <i class="ace-icon fa fa-search nav-search-icon"></i>
-                    </span>
-                </form>
-            </div><!-- /.nav-search -->
-        </div>
-
-        <div class="page-content">
-
-            <div class="page-header">
-                <h1>
-                    Tables
-                    <small>
-                        <i class="ace-icon fa fa-angle-double-right"></i>
-                        Index of Table
-                    </small>
-                </h1>
-            </div>
-
-            <div class="row">
-                <div class="col-xs-12">
-                    <!-- PAGE CONTENT BEGINS -->
-                    <div class="row">
-                        <div class="col-xs-12">
-                            <div class="clearfix">
-                                <div class="pull-right tableTools-container"></div>
-                            </div>
-                            <div class="d-flex justify-content-between align-items-center ">
-                                <div class="widget-header widget-header-flat" style="background-color: #618f8f;">
-                                    <h4 class="widget-title " style="color: #fff;">CRUD List</h4>
-
-                                    <span class="widget-toolbar">
-                                        <a href="{{ route('dashboard.crud-6.create') }}" style="color: #fff;">
-                                            <i class="ace-icon fa fa-plus"></i> Create CRUD - 6
-                                        </a>
-                                    </span>
-                                </div>
-
-                            </div>
-
-                            <!-- div.table-responsive -->
-
-                            <!-- Maint Table is Here -->
-                            <div>
-                                <table id="dynamic-table" class="table table-striped table-bordered table-hover">
-                                    <thead>
-                                        <tr>
-
-                                            <th style="font-weight: bold;"> Sl No </th>
-                                            <th> Name </th>
-                                            <th> Pnone No </th>
-                                            <th> Email </th>
-                                            <th> Image </th>
-                                            <th> Status </th>
-                                            <th> Action </th>
-                                        </tr>
-                                    </thead>
-
-                                    <tbody>
-
-                                        @php
-                                            $sl = $crud6->firstItem() ?? 0;
-                                        @endphp
-
-                                        @forelse ($crud6 as $crud)
-                                            <tr>
-                                                <td style="font-weight: bold;"> {{ $sl++ }}. </td>
-                                                <td> {{ $crud->name }} </td>
-                                                <td> {{ $crud->phone }} </td>
-                                                <td> {{ $crud->email }} </td>
-                                                {{-- <td>
-                                                    @if ($crud->image && is_array($crud->image))
-                                                        @foreach ($crud->image as $img)
-                                                            <img src="{{ asset($img) }}" width="100" class="mb-1"
-                                                                alt="">
-                                                        @endforeach
-                                                    @else
-                                                        <span>No image</span>
-                                                    @endif
-                                                </td> --}}
-
-                                                <td>
-                                                    @if ($crud->image)
-                                                        @foreach ($crud->image as $img)
-                                                            <img src="{{ asset($img) }}" width="100" height="60" class="mb-1"
-                                                                alt="">
-                                                        @endforeach
-                                                    @else
-                                                        <span>No image</span>
-                                                    @endif
-                                                </td>
-                                                <td>
-                                                    @if ($crud->status == 'active')
-                                                        <span
-                                                            class="label label-sm label-success arrowed-in">Active</span>
-                                                    @else
-                                                        <span
-                                                            class="label label-sm label-danger arrowed-in">Inactive</span>
-                                                    @endif
-                                                </td>
-
-                                                <td>
-                                                    <div class="hidden-sm hidden-xs action-buttons">
-                                                        <a class="blue" href="#">
-                                                            <i class="ace-icon fa fa-eye bigger-130"></i>
-                                                        </a>
-
-                                                        <a class="green"
-                                                            href="{{ route('dashboard.crud-6.edit', $crud->id) }}">
-                                                            <i class="ace-icon fa fa-pencil bigger-130"></i>
-                                                        </a>
-
-                                                        <form
-                                                            action="{{ route('dashboard.crud-6.destroy', $crud->id) }}"
-                                                            method="POST" style="display:inline;"
-                                                            onsubmit="return confirm('Are you sure you want to delete this item?');">
-
-                                                            @csrf
-                                                            @method('DELETE')
-                                                            <button type="submit" class="red"
-                                                                style="border: none; background: none;">
-                                                                <i class="ace-icon fa fa-trash-o bigger-130"></i>
-                                                            </button>
-                                                        </form>
-
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        @empty
-                                            <tr>
-                                                <td colspan="7" class="text-center text-danger">No data found.</td>
-                                            </tr>
-                                        @endforelse
-                                    </tbody>
-                                </table>
-
-                                <div class="text-center">
-                                    {{ $crud6->links('pagination::bootstrap-4') }}
-                                </div>
-
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- PAGE CONTENT ENDS -->
-                </div><!-- /.col -->
-            </div>
-        </div><!-- /.page-content -->
-    </div>
-</div>
+    <!-- Maint Table is Here -->
+	<div>
+		<table id="dynamic-table" class="table table-striped table-bordered table-hover">
+			<thead>
+				<tr>
+	
+					<th style="font-weight: bold;"> Sl No </th>
+					<th> Name </th>
+					<th> Pnone No </th>
+					<th> Email </th>
+					<th> Image </th>
+					<th> Status </th>
+					<th> Action </th>
+				</tr>
+			</thead>
+	
+			<tbody>
+	
+				@php
+					$sl = $crud6->firstItem() ?? 0;
+				@endphp
+	
+				@forelse ($crud6 as $crud)
+					<tr>
+						<td style="font-weight: bold;"> {{ $sl++ }}. </td>
+						<td> {{ $crud->name }} </td>
+						<td> {{ $crud->phone }} </td>
+						<td> {{ $crud->email }} </td>
+						{{-- <td>
+							@if ($crud->image && is_array($crud->image))
+								@foreach ($crud->image as $img)
+									<img src="{{ asset($img) }}" width="100" class="mb-1"
+										alt="">
+								@endforeach
+							@else
+								<span>No image</span>
+							@endif
+						</td> --}}
+	
+						<td>
+							@if ($crud->image)
+								@foreach ($crud->image as $img)
+									<img src="{{ asset($img) }}" width="100" height="60" class="mb-1"
+										alt="">
+								@endforeach
+							@else
+								<span>No image</span>
+							@endif
+						</td>
+						<td>
+							@if ($crud->status == 'active')
+								<span
+									class="label label-sm label-success arrowed-in">Active</span>
+							@else
+								<span
+									class="label label-sm label-danger arrowed-in">Inactive</span>
+							@endif
+						</td>
+	
+						<td>
+							<div class="hidden-sm hidden-xs action-buttons">
+								<a class="blue" href="#">
+									<i class="ace-icon fa fa-eye bigger-130"></i>
+								</a>
+	
+								<a class="green"
+									href="{{ route('dashboard.crud-6.edit', $crud->id) }}">
+									<i class="ace-icon fa fa-pencil bigger-130"></i>
+								</a>
+	
+								<form
+									action="{{ route('dashboard.crud-6.destroy', $crud->id) }}"
+									method="POST" style="display:inline;"
+									onsubmit="return confirm('Are you sure you want to delete this item?');">
+	
+									@csrf
+									@method('DELETE')
+									<button type="submit" class="red"
+										style="border: none; background: none;">
+										<i class="ace-icon fa fa-trash-o bigger-130"></i>
+									</button>
+								</form>
+	
+							</div>
+						</td>
+					</tr>
+				@empty
+					<tr>
+						<td colspan="7" class="text-center text-danger">No data found.</td>
+					</tr>
+				@endforelse
+			</tbody>
+		</table>
+	
+		<div class="text-center">
+			{{ $crud6->links('pagination::bootstrap-4') }}
+		</div>
+	</div>
+</div><!-- /.main-content -->
 @endsection
 ```
 _____
-
 ##### `create.blade.php`:
 ```html
 @extends('layouts.app')
-
 @section('content')
 @section('title', 'CRUD6 - Create')
 <!-- Table is here -->
 <div class="main-content">
-    <div class="main-content-inner">
-        <div class="breadcrumbs ace-save-state" id="breadcrumbs">
-            <ul class="breadcrumb">
-                <li>
-                    <i class="ace-icon fa fa-home home-icon"></i>
-                    <a href="#">Home</a>
-                </li>
+	<!-- div.dataTables_borderWrap -->
+	<form action="{{ route('dashboard.crud-6.store') }}" method="POST"
+		enctype="multipart/form-data">
+		@csrf
 
-                <li>
-                    <a href="#">Tables</a>
-                </li>
-                <li class="active">Create New</li>
-            </ul><!-- /.breadcrumb -->
+		<div class="form-group">
+			<label for="name">Name</label>
+			<input type="text" name="name" class="form-control"
+				placeholder="Enter name" required>
+		</div>
 
-            <div class="nav-search" id="nav-search">
-                <form class="form-search">
-                    <span class="input-icon">
-                        <input type="text" placeholder="Search ..." class="nav-search-input" id="nav-search-input"
-                            autocomplete="off" />
-                        <i class="ace-icon fa fa-search nav-search-icon"></i>
-                    </span>
-                </form>
-            </div><!-- /.nav-search -->
-        </div>
+		<div class="form-group">
+			<label for="phone">Phone No</label>
+			<input type="text" name="phone" class="form-control"
+				placeholder="+8801XXXXXXXXX" required>
+		</div>
 
-        <div class="page-content">
-        
+		<div class="form-group">
+			<label for="email">Email</label>
+			<input type="email" name="email" class="form-control"
+				placeholder="example@email.com" required>
+		</div>
 
-            <div class="page-header">
-                <h1>
-                    Tables
-                    <small>
-                        <i class="ace-icon fa fa-angle-double-right"></i>
-                        Create New Table
-                    </small>
-                </h1>
-            </div>
+		{{-- Multiple Image Start --}}
+		<div id="image-upload-wrapper">
+		  <div class="form-group d-flex align-items-center mb-2">
+			<label for="image" class="me-2">Image (required)</label>
+			<input type="file" name="image[]" class="form-control me-2" required>
+		  </div>
+		</div>
 
-            <div class="row">
-                <div class="col-xs-12">
-                    <!-- PAGE CONTENT BEGINS -->
+		<button type="button" id="add-image" class="btn btn-info mt-2">+ Add Another Image</button>
+		{{-- Multiple Image End --}}
 
+		<div class="form-group">
+			<label for="status">Status</label><br>
 
+			<label>
+				<input type="radio" name="status" value="active" checked> Active
+			</label>
+			&nbsp;&nbsp;
+			<label>
+				<input type="radio" name="status" value="inactive"> Inactive
+			</label>
+		</div>
 
-                    <div class="row">
-                        <div class="col-xs-12 ">
-                            <div class="col-md-2"></div>
+		<div class="form-actions center">
+			<button type="submit" class="btn btn-success">
+				<i class="ace-icon fa fa-check bigger-110"></i>
+				Submit
+			</button>
 
-                            <div class="col-md-8">
-                                <div class="clearfix">
-                                    <div class="pull-right tableTools-container"></div>
-                                </div>
-                                <div class="d-flex justify-content-between align-items-center ">
-                                    <div class="widget-header widget-header-flat " style="background-color: #618f8f;">
-                                        <h4 class="widget-title" style="color: #fff;">Create Data</h4>
-
-                                        <span class="widget-toolbar">
-                                            <a href="{{ route('dashboard.crud-6.index') }}" style="color: #fff;">
-                                                <i class="ace-icon fa fa-plus"></i> Go To Index
-                                            </a>
-                                        </span>
-                                    </div>
-
-                                </div>
-
-                                <!-- div.table-responsive -->
-
-                                <!-- div.dataTables_borderWrap -->
-                                <form action="{{ route('dashboard.crud-6.store') }}" method="POST"
-                                    enctype="multipart/form-data">
-                                    @csrf
-
-                                    <div class="form-group">
-                                        <label for="name">Name</label>
-                                        <input type="text" name="name" class="form-control"
-                                            placeholder="Enter name" required>
-                                    </div>
-
-                                    <div class="form-group">
-                                        <label for="phone">Phone No</label>
-                                        <input type="text" name="phone" class="form-control"
-                                            placeholder="+8801XXXXXXXXX" required>
-                                    </div>
-
-                                    <div class="form-group">
-                                        <label for="email">Email</label>
-                                        <input type="email" name="email" class="form-control"
-                                            placeholder="example@email.com" required>
-                                    </div>
-
-                                    {{-- Multiple Image Start --}}
-                                    <div id="image-upload-wrapper">
-                                      <div class="form-group d-flex align-items-center mb-2">
-                                        <label for="image" class="me-2">Image (required)</label>
-                                        <input type="file" name="image[]" class="form-control me-2" required>
-                                      </div>
-                                    </div>
-
-                                    <button type="button" id="add-image" class="btn btn-info mt-2">+ Add Another Image</button>
-                                    {{-- Multiple Image End --}}
-
-                                    <div class="form-group">
-                                        <label for="status">Status</label><br>
-
-                                        <label>
-                                            <input type="radio" name="status" value="active" checked> Active
-                                        </label>
-                                        &nbsp;&nbsp;
-                                        <label>
-                                            <input type="radio" name="status" value="inactive"> Inactive
-                                        </label>
-                                    </div>
-
-                                    <div class="form-actions center">
-                                        <button type="submit" class="btn btn-success">
-                                            <i class="ace-icon fa fa-check bigger-110"></i>
-                                            Submit
-                                        </button>
-
-                                        <a href="{{ route('dashboard.crud-6.index') }}" class="btn btn-warning">
-                                            <i class="ace-icon fa fa-arrow-left bigger-110"></i>
-                                            Back
-                                        </a>
-                                    </div>
-                                </form>
-                                {{-- ফর্ম শেষ --}}
-                            </div>
-                            <div class="col-md-2"></div>
-                        </div>
-                    </div>
-
-                    <!-- PAGE CONTENT ENDS -->
-                </div><!-- /.col -->
-            </div>
-        </div><!-- /.page-content -->
-    </div>
-</div>
-<!-- /.main-content -->
+			<a href="{{ route('dashboard.crud-6.index') }}" class="btn btn-warning">
+				<i class="ace-icon fa fa-arrow-left bigger-110"></i>
+				Back
+			</a>
+		</div>
+	</form>
+	{{-- End Main Form --}}
+</div><!-- /.main-content -->
 
 @if (session('error'))
     <div class="alert alert-danger">
@@ -608,7 +453,6 @@ _____
 @endif
 
 @endsection
-
 @push('scripts')
 <script>
   document.getElementById('add-image').addEventListener('click', function() {
@@ -636,177 +480,126 @@ _____
 
 ```
 ______
-
 ##### `edit.blade.php`:
 ```html
 @extends('layouts.app')
 @section('content')
 @section('title', 'CRUD6 - Edit Entry')
 <div class="main-content">
-    <div class="main-content-inner">
-        <div class="breadcrumbs ace-save-state" id="breadcrumbs">
-            <ul class="breadcrumb">
-                <li><i class="ace-icon fa fa-home home-icon"></i><a href="#">Home</a></li>
-                <li><a href="#">Tables</a></li>
-                <li class="active">Edit Entry</li>
-            </ul>
-        </div>
+	<!-- Edit Form Start -->
+	<form action="{{ route('dashboard.crud-6.update', $crud6->id) }}" method="POST"
+		enctype="multipart/form-data">
+		@csrf
+		@method('PUT')
 
-        <div class="page-content">
-            <div class="page-header">
-                <h1>
-                    Edit Entry
-                    <small><i class="ace-icon fa fa-angle-double-right"></i> Update Existing Data</small>
-                </h1>
-            </div>
+		<div class="form-group">
+			<label for="name">Name</label>
+			<input type="text" name="name" class="form-control"
+				value="{{ $crud6->name }}" required>
+		</div>
 
-            <div class="row">
-                <div class="col-xs-12">
-                    <div class="row">
-                        <div class="col-xs-12">
-                            <div class="col-md-2"></div>
+		<div class="form-group">
+			<label for="phone">Phone No</label>
+			<input type="text" name="phone" class="form-control"
+				value="{{ $crud6->phone }}" required>
+		</div>
 
-                            <div class="col-md-8">
+		<div class="form-group">
+			<label for="email">Email</label>
+			<input type="email" name="email" class="form-control"
+				value="{{ $crud6->email }}" required>
+		</div>
 
-                                @if (session('success'))
-                                    <div class="alert alert-success">
-                                        {{ session('success') }}
-                                    </div>
-                                @endif
+		<!-- Current Images Section -->
+		<div class="form-group">
+			<label>Current Images</label><br>
+			@php
+				$existingImages = is_array($crud6->image)
+					? $crud6->image
+					: json_decode($crud6->image, true) ?? [];
+			@endphp
 
-                                <div class="widget-header widget-header-flat " style="background-color: #618f8f;">
-                                  <h4 class="widget-title" style="color: #fff;">Edit Data</h4>
+			@if (count($existingImages) > 0)
+				<div class="row mb-3">
+					@foreach ($existingImages as $index => $image)
+						<div class="col-md-4 mb-3">
+							<div class="card">
+								<img src="{{ asset($image) }}" class="card-img-top"
+									style="height: 150px; object-fit: cover;">
+								<div class="card-body p-2">
+									<div class="form-check">
+										<input class="form-check-input" type="checkbox"
+											name="delete_images[]"
+											value="{{ $image }}"
+											id="delete_img_{{ $index }}">
+										<label class="form-check-label"
+											for="delete_img_{{ $index }}">
+											Delete
+										</label>
+									</div>
+									<div class="mt-2">
+										<label class="btn btn-sm btn-outline-primary w-100">
+											Change Image
+											<input type="file"
+												name="replace_images[{{ $index }}]"
+												class="d-none replace-image"
+												data-index="{{ $index }}">
+										</label>
+									</div>
+									<input type="hidden" name="existing_images[]"
+										value="{{ $image }}">
+								</div>
+							</div>
+						</div>
+					@endforeach
+				</div>
+			@else
+				<p>No images uploaded.</p>
+			@endif
+		</div>
 
-                                  <span class="widget-toolbar">
-                                    <a href="{{ route('dashboard.crud-6.index') }}" style="color: #fff;">
-                                      <i class="ace-icon fa fa-list"></i> Back to List
-                                    </a>
-                                  </span>
-                                </div>
-                                <!-- Edit Form Start -->
-                                <form action="{{ route('dashboard.crud-6.update', $crud6->id) }}" method="POST"
-                                    enctype="multipart/form-data">
-                                    @csrf
-                                    @method('PUT')
+		<!-- New Images Section -->
+		<div class="form-group">
+			<label>Add New Images</label>
+			<div id="new-images-container">
+				<div class="input-group mb-2">
+					<input type="file" name="new_images[]" class="form-control">
+					<button type="button" class="btn btn-danger remove-new-image">× Remove
+						Field</button>
+				</div>
+			</div>
+			<button type="button" id="add-new-image" class="btn btn-sm btn-primary mt-2">
+				<i class="fa fa-plus"></i> Add More Images
+			</button>
+		</div>
 
-                                    <div class="form-group">
-                                        <label for="name">Name</label>
-                                        <input type="text" name="name" class="form-control"
-                                            value="{{ $crud6->name }}" required>
-                                    </div>
+		<div class="form-group">
+			<label for="status">Status</label><br>
+			<label>
+				<input type="radio" name="status" value="active"
+					{{ $crud6->status == 'active' ? 'checked' : '' }}> Active
+			</label>
+			<label>
+				<input type="radio" name="status" value="inactive"
+					{{ $crud6->status == 'inactive' ? 'checked' : '' }}> Inactive
+			</label>
+		</div>
 
-                                    <div class="form-group">
-                                        <label for="phone">Phone No</label>
-                                        <input type="text" name="phone" class="form-control"
-                                            value="{{ $crud6->phone }}" required>
-                                    </div>
+		<div class="form-actions center">
+		  <button type="submit" class="btn btn-sm btn-success">
+			Update
+			<i class="ace-icon fa fa-check icon-on-right bigger-110"></i>
+		  </button>
 
-                                    <div class="form-group">
-                                        <label for="email">Email</label>
-                                        <input type="email" name="email" class="form-control"
-                                            value="{{ $crud6->email }}" required>
-                                    </div>
-
-                                    <!-- Current Images Section -->
-                                    <div class="form-group">
-                                        <label>Current Images</label><br>
-                                        @php
-                                            $existingImages = is_array($crud6->image)
-                                                ? $crud6->image
-                                                : json_decode($crud6->image, true) ?? [];
-                                        @endphp
-
-                                        @if (count($existingImages) > 0)
-                                            <div class="row mb-3">
-                                                @foreach ($existingImages as $index => $image)
-                                                    <div class="col-md-4 mb-3">
-                                                        <div class="card">
-                                                            <img src="{{ asset($image) }}" class="card-img-top"
-                                                                style="height: 150px; object-fit: cover;">
-                                                            <div class="card-body p-2">
-                                                                <div class="form-check">
-                                                                    <input class="form-check-input" type="checkbox"
-                                                                        name="delete_images[]"
-                                                                        value="{{ $image }}"
-                                                                        id="delete_img_{{ $index }}">
-                                                                    <label class="form-check-label"
-                                                                        for="delete_img_{{ $index }}">
-                                                                        Delete
-                                                                    </label>
-                                                                </div>
-                                                                <div class="mt-2">
-                                                                    <label class="btn btn-sm btn-outline-primary w-100">
-                                                                        Change Image
-                                                                        <input type="file"
-                                                                            name="replace_images[{{ $index }}]"
-                                                                            class="d-none replace-image"
-                                                                            data-index="{{ $index }}">
-                                                                    </label>
-                                                                </div>
-                                                                <input type="hidden" name="existing_images[]"
-                                                                    value="{{ $image }}">
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                @endforeach
-                                            </div>
-                                        @else
-                                            <p>No images uploaded.</p>
-                                        @endif
-                                    </div>
-
-                                    <!-- New Images Section -->
-                                    <div class="form-group">
-                                        <label>Add New Images</label>
-                                        <div id="new-images-container">
-                                            <div class="input-group mb-2">
-                                                <input type="file" name="new_images[]" class="form-control">
-                                                <button type="button" class="btn btn-danger remove-new-image">× Remove
-                                                    Field</button>
-                                            </div>
-                                        </div>
-                                        <button type="button" id="add-new-image" class="btn btn-sm btn-primary mt-2">
-                                            <i class="fa fa-plus"></i> Add More Images
-                                        </button>
-                                    </div>
-
-                                    <div class="form-group">
-                                        <label for="status">Status</label><br>
-                                        <label>
-                                            <input type="radio" name="status" value="active"
-                                                {{ $crud6->status == 'active' ? 'checked' : '' }}> Active
-                                        </label>
-                                        <label>
-                                            <input type="radio" name="status" value="inactive"
-                                                {{ $crud6->status == 'inactive' ? 'checked' : '' }}> Inactive
-                                        </label>
-                                    </div>
-
-                                    <div class="form-actions center">
-                                      <button type="submit" class="btn btn-sm btn-success">
-                                        Update
-                                        <i class="ace-icon fa fa-check icon-on-right bigger-110"></i>
-                                      </button>
-
-                                      <a href="{{ route('dashboard.crud-6.index') }}" class="btn btn-sm btn-warning">
-                                        <i class="ace-icon fa fa-arrow-left bigger-110"></i> Back
-                                      </a>
-                                    </div>
-
-                                </form>
-                                <!-- Edit Form End -->
-                            </div>
-                            <div class="col-md-2"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+		  <a href="{{ route('dashboard.crud-6.index') }}" class="btn btn-sm btn-warning">
+			<i class="ace-icon fa fa-arrow-left bigger-110"></i> Back
+		  </a>
+		</div>
+	</form>
+	<!-- Edit Form End -->
 </div>
-
+</div>
 @endsection
-
 @push('scripts')
 <script>
     // Add new image field
