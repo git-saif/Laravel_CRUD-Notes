@@ -1,5 +1,4 @@
-
-Laravel -এ CRUD Operation এর জন্য 6টি Step Follow করতে হয়। সেগুলো হলোঃ
+Laravel -এর এই CRUD Operation এ আমরা **Product/Post** এর **Sub Category** Create করা শিখবো। এর জন্য 6টি Step Follow করতে হয়। সেগুলো হলোঃ
 
 1. Routes               =>  `routes\web.php`
 2. Model                => `app\Models\Crud8.php`
@@ -247,11 +246,9 @@ class Crud8Request extends FormRequest
 		  {{-- Foreign key data from Crud7 --}}
 		  <td>{{ $item->category->name ?? 'N/A' }}</td>
 		  <td>{{ $item->category->serial_no ?? 'N/A' }}</td>
-
 		  <td>{{ $item->name }}</td>
 		  <td>{{ $item->slug }}</td>
 		  <td>{{ $item->serial_no }}</td>
-
 		  <td>
 			@if ($item->status === 'active')
 			<span class="badge badge-success">Active</span>
@@ -259,7 +256,6 @@ class Crud8Request extends FormRequest
 			<span class="badge badge-danger">Inactive</span>
 			@endif
 		  </td>
-
 		  <td>
 			<div class="hidden-sm hidden-xs action-buttons">
 			  <a class="blue" href="#">
@@ -270,7 +266,8 @@ class Crud8Request extends FormRequest
 				<i class="ace-icon fa fa-pencil bigger-130"></i>
 			  </a>
 
-			  <form action="{{ route('dashboard.crud-8.destroy', $item->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this item?');">
+			  <form action="{{ route('dashboard.crud-8.destroy', $item->id) }}" 
+				    method="POST" style="display:inline;" onsubmit="return confirm('Are you sure ?');">
 				@csrf
 				@method('DELETE')
 				<button type="submit" class="red" style="border: none; background: none;">
@@ -427,127 +424,92 @@ class Crud8Request extends FormRequest
 @section('title', 'CRUD8 - Sub-Category Edit')
 <!-- Edit form -->
 <div class="main-content">
-  <div class="main-content-inner">
-    <div class="breadcrumbs ace-save-state" id="breadcrumbs">
-      <ul class="breadcrumb">
-        <li><i class="ace-icon fa fa-home home-icon"></i><a href="#">Home</a></li>
-        <li><a href="#">Tables</a></li>
-        <li class="active">Edit Sub-Category</li>
-      </ul>
-    </div>
+	<!-- Edit Form Start -->
+	<form action="{{ route('dashboard.crud-8.update', $crud8->id) }}" method="POST" 
+		  enctype="multipart/form-data">
+	  @csrf
+	  @method('PUT')
 
-    <div class="page-content">
-      <div class="page-header">
-        <h1>
-          Edit Entry
-          <small><i class="ace-icon fa fa-angle-double-right"></i> Update Existing Sub-Category</small>
-        </h1>
-      </div>
+	  {{-- Parent Category --}}
+	  <div class="form-group">
+		<label for="crud7_id">Parent Category</label>
+		<select name="crud7_id" id="crud7_id" 
+				class="form-control @error('crud7_id') is-invalid @enderror" required>
+		  <option value="">-- Select Category --</option>
+		  @foreach($categories as $category)
+		  <option value="{{ $category->id }}" 
+				  {{ old('crud7_id', $crud8->crud7_id) == $category->id ? 'selected' : '' }}>
+			{{ $category->name }}
+		  </option>
+		  @endforeach
+		</select>
+		@error('crud7_id')
+		<small class="text-danger">{{ $message }}</small>
+		@enderror
+	  </div>
 
-      <div class="row">
-        <div class="col-xs-12">
-          <div class="row">
-            <div class="col-xs-12 ">
-              <div class="col-md-2"></div>
+	  {{-- Name --}}
+	  <div class="form-group">
+		<label for="name">Subcategory Name</label>
+		<input type="text" id="name" name="name" class="form-control @error('name') is-invalid @enderror" 
+			   value="{{ old('name', $crud8->name) }}" placeholder="Enter subcategory name" required>
+		@error('name')
+		<small class="text-danger">{{ $message }}</small>
+		@enderror
+	  </div>
 
-              <div class="col-md-8">
-                <div class="widget-header widget-header-flat " style="background-color: #618f8f;">
-                  <h4 class="widget-title" style="color: #fff;">Edit Sub-Category</h4>
+	  {{-- Slug (auto-generated) --}}
+	  <div class="form-group">
+		<label for="slug">Slug (Auto Generated)</label>
+		<input type="text" id="slug" name="slug" class="form-control"
+			   value="{{ old('slug', $crud8->slug) }}" readonly>
+	  </div>
 
-                  <span class="widget-toolbar">
-                    <a href="{{ route('dashboard.crud-8.index') }}" style="color: #fff;">
-                      <i class="ace-icon fa fa-list"></i> Back to List
-                    </a>
-                  </span>
-                </div>
+	  {{-- Serial Number --}}
+	  <div class="form-group">
+		<label for="serial_no">Serial No</label>
+		<input type="number" name="serial_no" 
+			   class="form-control @error('serial_no') is-invalid @enderror"
+			   value="{{ old('serial_no', $crud8->serial_no) }}"
+			   placeholder="Enter serial number" required>
+		@error('serial_no')
+		<small class="text-danger">{{ $message }}</small>
+		@enderror
+	  </div>
 
-                <!-- Edit Form Start -->
-                <form action="{{ route('dashboard.crud-8.update', $crud8->id) }}" method="POST" enctype="multipart/form-data">
-                  @csrf
-                  @method('PUT')
+	  {{-- Status --}}
+	  <div class="form-group">
+		<label for="status">Status</label><br>
+		<label>
+		  <input type="radio" name="status" value="active" 
+				 {{ old('status', $crud8->status) == 'active' ? 'checked' : '' }}>
+		  Active
+		</label>
+		&nbsp;&nbsp;
+		<label>
+		  <input type="radio" name="status" value="inactive" 
+				 {{ old('status', $crud8->status) == 'inactive' ? 'checked' : '' }}>
+		  Inactive
+		</label>
+		@error('status')
+		<br><small class="text-danger">{{ $message }}</small>
+		@enderror
+	  </div>
+	  <div class="form-actions center">
+		<button type="submit" class="btn btn-sm btn-success">
+		  Update
+		  <i class="ace-icon fa fa-check icon-on-right bigger-110"></i>
+		</button>
 
-                  {{-- Parent Category --}}
-                  <div class="form-group">
-                    <label for="crud7_id">Parent Category</label>
-                    <select name="crud7_id" id="crud7_id" class="form-control @error('crud7_id') is-invalid @enderror" required>
-                      <option value="">-- Select Category --</option>
-                      @foreach($categories as $category)
-                      <option value="{{ $category->id }}" {{ old('crud7_id', $crud8->crud7_id) == $category->id ? 'selected' : '' }}>
-                        {{ $category->name }}
-                      </option>
-                      @endforeach
-                    </select>
-                    @error('crud7_id')
-                    <small class="text-danger">{{ $message }}</small>
-                    @enderror
-                  </div>
-
-                  {{-- Name --}}
-                  <div class="form-group">
-                    <label for="name">Subcategory Name</label>
-                    <input type="text" id="name" name="name" class="form-control @error('name') is-invalid @enderror" value="{{ old('name', $crud8->name) }}" placeholder="Enter subcategory name" required>
-                    @error('name')
-                    <small class="text-danger">{{ $message }}</small>
-                    @enderror
-                  </div>
-
-                  {{-- Slug (auto-generated) --}}
-                  <div class="form-group">
-                    <label for="slug">Slug (Auto Generated)</label>
-                    <input type="text" id="slug" name="slug" class="form-control" value="{{ old('slug', $crud8->slug) }}" readonly>
-                  </div>
-
-                  {{-- Serial Number --}}
-                  <div class="form-group">
-                    <label for="serial_no">Serial No</label>
-                    <input type="number" name="serial_no" class="form-control @error('serial_no') is-invalid @enderror" value="{{ old('serial_no', $crud8->serial_no) }}" placeholder="Enter serial number" required>
-                    @error('serial_no')
-                    <small class="text-danger">{{ $message }}</small>
-                    @enderror
-                  </div>
-
-                  {{-- Status --}}
-                  <div class="form-group">
-                    <label for="status">Status</label><br>
-                    <label>
-                      <input type="radio" name="status" value="active" {{ old('status', $crud8->status) == 'active' ? 'checked' : '' }}>
-                      Active
-                    </label>
-                    &nbsp;&nbsp;
-                    <label>
-                      <input type="radio" name="status" value="inactive" {{ old('status', $crud8->status) == 'inactive' ? 'checked' : '' }}>
-                      Inactive
-                    </label>
-                    @error('status')
-                    <br><small class="text-danger">{{ $message }}</small>
-                    @enderror
-                  </div>
-                  <div class="form-actions center">
-                    <button type="submit" class="btn btn-sm btn-success">
-                      Update
-                      <i class="ace-icon fa fa-check icon-on-right bigger-110"></i>
-                    </button>
-
-                    <a href="{{ route('dashboard.crud-8.index') }}" class="btn btn-sm btn-warning">
-                      <i class="ace-icon fa fa-arrow-left bigger-110"></i> Back
-                    </a>
-                  </div>
-                </form>
-                <!-- Edit Form End -->
-              </div>
-              <div class="col-md-2"></div>
-            </div>
-          </div>
-        </div><!-- /.col -->
-      </div>
-    </div><!-- /.page-content -->
-  </div>
-</div>
-<!-- /.main-content -->
+		<a href="{{ route('dashboard.crud-8.index') }}" class="btn btn-sm btn-warning">
+		  <i class="ace-icon fa fa-arrow-left bigger-110"></i> Back
+		</a>
+	  </div>
+	</form>
+	<!-- Edit Form End -->
+</div><!-- /.main-content -->
 @endsection
-
 @push('scripts')
-
 {{-- Slug Auto Generator Script --}}
 <script>
   document.addEventListener('DOMContentLoaded', function() {

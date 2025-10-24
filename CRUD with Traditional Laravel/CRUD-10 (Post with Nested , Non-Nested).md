@@ -16,19 +16,16 @@ Laravel -এ এই CRUD Operation এর জন্য ৬টি Step Follow ক
 6. Views                =>  `index.blade.php` , `create.blade.php` , `edit.blade.php`
    
 নিচে এগুলোর বিস্তারিত বর্ণনা দেয়া হলোঃ
-
 #### **Workflow**:
 ```scss
 						(Route → Middleware (if any) → Controller → FormRequest → Model → View)
 ```
 ____
-
 ## Step-1: (Web Route)
 
 ##### `routes/web.php`:
 ```php
 Route::group(['prefix' => 'dashboard', 'as' => 'dashboard.'], function () {
-
     Route::resources([
     
         // CRUD (Post)
@@ -78,23 +75,23 @@ ____
 
 ##### `database\migrations\2025_05_05_100447_create_crud10s_table.php`:
 ```php
-	Schema::create('crud10s', function (Blueprint $table) {
-		$table->id();
-		// Foreign keys
-		$table->foreignId('crud7_id')->constrained('crud7s')->onDelete('cascade'); // category required
-		$table->foreignId('crud8_id')->nullable()->constrained('crud8s')->onDelete('set null'); // sub-category optional
-		$table->foreignId('crud9_id')->nullable()->constrained('crud9s')->onDelete('set null'); // sub-sub optional
+Schema::create('crud10s', function (Blueprint $table) {
+	$table->id();
+	// Foreign keys
+	$table->foreignId('crud7_id')->constrained('crud7s')->onDelete('cascade'); // category required
+	$table->foreignId('crud8_id')->nullable()->constrained('crud8s')->onDelete('set null'); // sub-category
+	$table->foreignId('crud9_id')->nullable()->constrained('crud9s')->onDelete('set null'); // sub-sub-category
 
-		// Post Fields
-		$table->string('post_serial')->unique();
-		$table->string('post_name')->unique();
-		$table->string('post_title');
-		$table->text('short_description')->nullable();
-		$table->longText('post');
-		
-		$table->enum('status', ['active', 'inactive'])->default('active');
-		$table->timestamps();
-	});
+	// Post Fields
+	$table->string('post_serial')->unique();
+	$table->string('post_name')->unique();
+	$table->string('post_title');
+	$table->text('short_description')->nullable();
+	$table->longText('post');
+	
+	$table->enum('status', ['active', 'inactive'])->default('active');
+	$table->timestamps();
+});
 ```
 _____
 ## Step-4: (Controller)
@@ -202,7 +199,6 @@ class Crud10Controller extends Controller
 }
 ```
 ----
-
 #### **Using Ajax Rendering :**
 
 ##### `app\Http\Controllers\Crud10Controller.php`:
@@ -268,7 +264,6 @@ class Crud10Controller extends Controller
         return response()->json($subsubcategories);
     }
     // End=======================<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
 
     public function store(Crud10Request $request)
     {
@@ -341,9 +336,7 @@ class Crud10Controller extends Controller
 }
 ```
 ______
-
 ## Step-5: (Form Request)
-
 
 ##### **`app\Http\Requests\Crud10Request.php:`**
 ```php
@@ -408,7 +401,6 @@ class Crud10Request extends FormRequest
 }
 ```
 -------
-
 ## Step-6: (View Create)
 
 #### **Using Server Side Rendering :**

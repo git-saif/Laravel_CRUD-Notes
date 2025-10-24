@@ -1,5 +1,4 @@
-
-Laravel -এ CRUD Operation এর জন্য 6টি Step Follow করতে হয়। সেগুলো হলোঃ
+Laravel -এর এই CRUD Operation এ আমরা **Product/Post** এর **Category** Create করা শিখবো। এর জন্য 6টি Step Follow করতে হয়। সেগুলো হলোঃ
 
 1. Routes               =>  `routes\web.php`
 2. Model                => `app\Models\Crud7.php`
@@ -104,11 +103,6 @@ class Crud7Controller extends Controller
         } catch (\Throwable $th) {
             return redirect()->back()->with('error', 'Something went wrong: ' . $th->getMessage());
         }
-    }
-
-    public function show(string $id)
-    {
-        //
     }
 
     public function edit(string $id)
@@ -394,13 +388,15 @@ ___
 	  {{-- Slug (auto-generated) --}}
 	  <div class="form-group">
 		<label for="slug">Slug (Auto Generated)</label>
-		<input type="text" id="slug" name="slug" class="form-control" value="{{ old('slug', $crud7->slug) }}" readonly>
+		<input type="text" id="slug" name="slug" class="form-control"
+			   value="{{ old('slug', $crud7->slug) }}" readonly>
 	  </div>
 
 	  {{-- Serial Number --}}
 	  <div class="form-group">
 		<label for="serial_no">Serial No</label>
-		<input type="number" name="serial_no" class="form-control @error('serial_no') is-invalid @enderror" value="{{ old('serial_no', $crud7->serial_no) }}" placeholder="Enter serial number" required>
+		<input type="number" name="serial_no" class="form-control @error('serial_no') is-invalid @enderror"
+			   value="{{ old('serial_no', $crud7->serial_no) }}" placeholder="Enter serial number" required>
 		@error('serial_no')
 		<small class="text-danger">{{ $message }}</small>
 		@enderror
@@ -410,7 +406,8 @@ ___
 	  <div class="form-group">
 		<label for="status">Status</label><br>
 		<label>
-		  <input type="radio" name="status" value="active" {{ old('status', $crud7->status) == 'active' ? 'checked' : '' }}> Active
+		  <input type="radio" name="status" value="active"
+				 {{ old('status', $crud7->status) == 'active' ? 'checked' : '' }}> Active
 		</label>
 		&nbsp;&nbsp;
 		<label>
