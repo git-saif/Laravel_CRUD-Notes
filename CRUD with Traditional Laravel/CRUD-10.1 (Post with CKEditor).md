@@ -5,7 +5,6 @@
 3. Views                =>  `show.blade.php` , `create.blade.php` , `edit.blade.php`
    
 নিচে এগুলোর বিস্তারিত বর্ণনা দেয়া হলোঃ
-
 ## Step-1: (Web Route)
 
 ##### `routes/web.php`:
@@ -23,7 +22,6 @@ Route::group(['prefix' => 'dashboard', 'as' => 'dashboard.'], function () {
 });
 ```
 _____
-
 ## Step-2: (Controller -> add this function)
 
 ##### **`app\Http\Requests\Crud10Request.php:`**
@@ -58,7 +56,6 @@ _____
     }
 ```
 ----
-
 ## Step-3: (Post View Form Edit)
 
 ##### `show.blade.php`: (form only)
@@ -67,7 +64,6 @@ _____
 	<td>{!! $crud10->post !!}</td>
 ```
 ---
-
 ##### `create.blade.php`: (form only)
 ```html
 {{-- Post Content --}}
@@ -95,7 +91,6 @@ _____
 </script>
 ```
 ___
-
 ##### `edit.blade.php`: (form only)
 ```html
 {{-- Post Content --}}

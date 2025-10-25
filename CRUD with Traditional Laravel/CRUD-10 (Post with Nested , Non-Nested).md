@@ -113,31 +113,52 @@ class Crud10Controller extends Controller
 
     public function create()
     {
-        // সব category
-        $categories = Crud7::orderBy('name')->get();
+        try {
+            // All category
+            $categories = Crud7::where('status', 'active')->orderBy('name')->get();
 
-        // যদি কোনো category select করা থাকে (query string থেকে)
-        $selectedCategory = request()->query('category');
+            // sub-categories & sub-sub-categories will be loaded by AJAX
+            $subcategories = collect();
+            $subsubcategories = collect();
 
-        // যদি category select করা থাকে → তার subcategories আনবে
-        $subcategories = $selectedCategory
-            ? Crud8::where('crud7_id', $selectedCategory)->orderBy('name')->get()
-            : collect();
-
-        // যদি subcategory select করা থাকে → তার sub-subcategories আনবে
-        $selectedSubcategory = request()->query('subcategory');
-        $subsubcategories = $selectedSubcategory
-            ? Crud9::where('crud8_id', $selectedSubcategory)->orderBy('name')->get()
-            : collect();
-
-        return view('components.CRUD-10.create', compact(
-            'categories',
-            'subcategories',
-            'subsubcategories',
-            'selectedCategory',
-            'selectedSubcategory'
-        ));
+            return view('components.CRUD-10.create', compact(
+                'categories',
+                'subcategories',
+                'subsubcategories'
+            ));
+        } catch (\Exception $e) {
+            return redirect()->route('dashboard.crud-10.index')
+                ->with('error', 'Error: ' . $e->getMessage());
+        }
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Functions for AJAX to get subcategories  &&  sub-sub-categories
+    |--------------------------------------------------------------------------
+    */
+    public function getSubcategories($categoryId)
+    {
+        $subcategories = Crud8::where('crud7_id', $categoryId)
+            ->where('status', 'active')
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get();
+
+        return response()->json($subcategories);
+    }
+
+    public function getSubSubcategories($subcategoryId)
+    {
+        $subsubcategories = Crud9::where('crud8_id', $subcategoryId)
+            ->where('status', 'active')
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get();
+
+        return response()->json($subsubcategories);
+    }
+    // End=======================<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
     public function store(Crud10Request $request)
     {
@@ -154,23 +175,24 @@ class Crud10Controller extends Controller
 
     public function show(string $id)
     {
-        //
+        try {
+            $crud10 = Crud10::with(['category', 'subcategory', 'subsubcategory'])->findOrFail($id);
+
+            return view('components.CRUD-10.show', compact('crud10'));
+        } catch (\Throwable $th) {
+            return redirect()->route('dashboard.crud-10.index')
+                ->with('error', 'Error: ' . $th->getMessage());
+        }
     }
 
     public function edit(string $id)
     {
         try {
             $crud10 = Crud10::findOrFail($id);
-            $categories = Crud7::orderBy('name')->get();
-            $subcategories = Crud8::orderBy('name')->get();
-            $subsubcategories = Crud9::orderBy('name')->get();
+            $categories = Crud7::where('status', 'active')->orderBy('serial_no')->get();
 
-            return view('components.CRUD-10.edit', compact(
-                'crud10',
-                'categories',
-                'subcategories',
-                'subsubcategories'
-            ));
+            // only Category will be loaded — subcategory/sub-subcategory ajax will load by AJAX
+            return view('components.CRUD-10.edit', compact('crud10', 'categories'));
         } catch (\Throwable $th) {
             return back()->with('error', 'Error: ' . $th->getMessage());
         }
@@ -181,7 +203,18 @@ class Crud10Controller extends Controller
         try {
             $crud10 = Crud10::findOrFail($id);
             $crud10->update($request->validated());
-            return redirect()->route('dashboard.crud-10.index')->with('success', 'Post updated successfully.');
+
+            // যদি request-এর মধ্যে "redirect_to_show" নামে hidden field থাকে তাহলে show এ redirect করবে
+            if ($request->has('redirect_to_show')) {
+                return redirect()
+                    ->route('dashboard.crud-10.show', $crud10->id)
+                    ->with('success', 'Post updated successfully.');
+            }
+            // default — index এ যাবে
+            return redirect()
+                ->route('dashboard.crud-10.index')
+                ->with('success', 'Post updated successfully.');
+                
         } catch (\Throwable $th) {
             return back()->with('error', 'Error: ' . $th->getMessage());
         }
@@ -195,6 +228,35 @@ class Crud10Controller extends Controller
         } catch (\Throwable $th) {
             return back()->with('error', 'Error: ' . $th->getMessage());
         }
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    |               Image upload handler for CKEditor
+    |--------------------------------------------------------------------------
+    */
+    public function uploadImage(Request $request)
+    {
+        if ($request->hasFile('upload')) {
+            $file = $request->file('upload');
+            $filename = time() . '_' . $file->getClientOriginalName();
+
+            // Ensure the folder exists
+            $folder = public_path('uploads/ckeditor');
+            if (!file_exists($folder)) {
+                mkdir($folder, 0775, true);
+            }
+
+            $file->move($folder, $filename);
+            $url = asset('uploads/ckeditor/' . $filename);
+
+            // CKEditor expects this JSON
+            return response()->json([
+                'url' => $url
+            ]);
+        }
+
+        return response()->json(['error' => 'No file uploaded.'], 400);
     }
 }
 ```
@@ -411,328 +473,219 @@ class Crud10Request extends FormRequest
 @section('content')
 @section('title', 'CRUD10 - Post List')
 <div class="main-content">
-  <div class="main-content-inner">
-    <div class="breadcrumbs ace-save-state" id="breadcrumbs">
-      <ul class="breadcrumb">
-        <li>
-          <i class="ace-icon fa fa-home home-icon"></i>
-          <a href="#">Home</a>
-        </li>
+  <div class="widget-header widget-header-flat" style="background-color: #618f8f;">
+	<h4 class="widget-title" style="color: #fff;">Post List</h4>
+	<span class="widget-toolbar">
+	  <a href="{{ route('dashboard.crud-10.create') }}" style="color: #fff;">
+		<i class="ace-icon fa fa-plus"></i> Create New Post
+	  </a>
+	</span>
+  </div> <!-- Table Header -->
+  <div>
+	<table id="dynamic-table" class="table table-striped table-bordered table-hover">
+	  <thead class="table-dark text-center">
+		<tr>
+		  <th>SL</th>
+		  <th>Category</th>
+		  <th>Subcategory</th>
+		  <th>Sub-Subcategory</th>
+		  <th>Post Serial</th>
+		  <th>Post Name</th>
+		  <th>Post Title</th>
+		  <th>Short Description</th>
+		  <th>Post</th>
+		  <th>Status</th>
+		  <th width="140">Action</th>
+		</tr>
+	  </thead>
+	  <tbody>
+		@php $sl = $crud10->firstItem() ?? 1; @endphp
+		@forelse ($crud10 as $item)
+		<tr>
+		  <td style="font-weight: bold;">{{ $sl++ }}.</td>
 
-        <li>
-          <a href="#">Tables</a>
-        </li>
-        <li class="active">CRUD-10 Post List</li>
-      </ul>
+		  <td>{{ $item->category->name ?? '-' }}</td>
+		  <td>{{ $item->subcategory->name ?? '-' }}</td>
+		  <td>{{ $item->subsubcategory->name ?? '-' }}</td>
+		  <td>{{ $item->post_serial }}</td>
 
-      <div class="nav-search" id="nav-search">
-        <form class="form-search">
-          <span class="input-icon">
-            <input type="text" placeholder="Search ..." class="nav-search-input" id="nav-search-input" autocomplete="off" />
-            <i class="ace-icon fa fa-search nav-search-icon"></i>
-          </span>
-        </form>
-      </div>
-    </div>
+		  <td>{{ $item->post_name }}</td>
+		  <td>{{ $item->post_title }}</td>
+		  <td> {{ $item->short_description }}</td>
 
-    <div class="page-content">
+		  <td>{{ $item->post }}</td>
+		  
+		  <td>
+			@if ($item->status === 'active')
+			<span class="badge badge-success">Active</span>
+			@else
+			<span class="badge badge-danger">Inactive</span>
+			@endif
+		  </td>
 
-      <div class="page-header">
-        <h1>
-          Tables
-          <small>
-            <i class="ace-icon fa fa-angle-double-right"></i>
-            CRUD-10 Post List
-          </small>
-        </h1>
-      </div>
+		  <td>
+			<div class="hidden-sm hidden-xs action-buttons">
+			  <a class="blue" href="{{ route('dashboard.crud-10.show', $item->id) }}">
+				<i class="ace-icon fa fa-eye bigger-130"></i>
+			  </a>
 
-      <div class="row">
-        <div class="col-xs-12">
+			  <a class="green" href="{{ route('dashboard.crud-10.edit', $item->id) }}">
+				<i class="ace-icon fa fa-pencil bigger-130"></i>
+			  </a>
 
-          <div class="row">
-            <div class="col-xs-12">
-              <div class="clearfix">
-                <div class="pull-right tableTools-container"></div>
-              </div>
-
-              <div class="widget-header widget-header-flat" style="background-color: #618f8f;">
-                <h4 class="widget-title" style="color: #fff;">Post List</h4>
-                <span class="widget-toolbar">
-                  <a href="{{ route('dashboard.crud-10.create') }}" style="color: #fff;">
-                    <i class="ace-icon fa fa-plus"></i> Create New Post
-                  </a>
-                </span>
-              </div>
-
-              <div>
-                <table id="dynamic-table" class="table table-striped table-bordered table-hover">
-                  <thead class="table-dark text-center">
-                    <tr>
-                      <th>SL</th>
-                      <th>Category</th>
-                      <th>Subcategory</th>
-                      <th>Sub-Subcategory</th>
-                      <th>Post Serial</th>
-                      <th>Post Name</th>
-                      <th>Post Title</th>
-                      <th>Short Description</th>
-                      <th>Post</th>
-                      <th>Status</th>
-                      <th width="140">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    @php $sl = $crud10->firstItem() ?? 1; @endphp
-                    @forelse ($crud10 as $item)
-                    <tr>
-                      <td style="font-weight: bold;">{{ $sl++ }}.</td>
-
-                      <td>{{ $item->category->name ?? '-' }}</td>
-                      <td>{{ $item->subcategory->name ?? '-' }}</td>
-                      <td>{{ $item->subsubcategory->name ?? '-' }}</td>
-                      <td>{{ $item->post_serial }}</td>
-
-                      <td>{{ $item->post_name }}</td>
-                      <td>{{ $item->post_title }}</td>
-                      <td> {{ $item->short_description }}</td>
-
-                      <td>{{ $item->post }}</td>
-                      
-                      <td>
-                        @if ($item->status === 'active')
-                        <span class="badge badge-success">Active</span>
-                        @else
-                        <span class="badge badge-danger">Inactive</span>
-                        @endif
-                      </td>
-
-                      <td>
-                        <div class="hidden-sm hidden-xs action-buttons">
-                          <a class="blue" href="{{ route('dashboard.crud-10.show', $item->id) }}">
-                            <i class="ace-icon fa fa-eye bigger-130"></i>
-                          </a>
-
-                          <a class="green" href="{{ route('dashboard.crud-10.edit', $item->id) }}">
-                            <i class="ace-icon fa fa-pencil bigger-130"></i>
-                          </a>
-
-                          <form action="{{ route('dashboard.crud-10.destroy', $item->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this item?');">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="red" style="border: none; background: none;">
-                              <i class="ace-icon fa fa-trash-o bigger-130"></i>
-                            </button>
-                          </form>
-                        </div>
-                      </td>
-                    </tr>
-                    @empty
-                    <tr>
-                      <td colspan="9" class="text-center text-danger">No data found.</td>
-                    </tr>
-                    @endforelse
-                  </tbody>
-                </table>
-                <div class="text-center">
-                  {{ $crud10->links('pagination::bootstrap-4') }}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div><!-- /.col -->
-      </div>
-    </div><!-- /.page-content -->
+			  <form action="{{ route('dashboard.crud-10.destroy', $item->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this item?');">
+				@csrf
+				@method('DELETE')
+				<button type="submit" class="red" style="border: none; background: none;">
+				  <i class="ace-icon fa fa-trash-o bigger-130"></i>
+				</button>
+			  </form>
+			</div>
+		  </td>
+		</tr>
+		@empty
+		<tr>
+		  <td colspan="9" class="text-center text-danger">No data found.</td>
+		</tr>
+		@endforelse
+	  </tbody>
+	</table>
+	<div class="text-center">
+	  {{ $crud10->links('pagination::bootstrap-4') }}
+	</div>
   </div>
 </div>
 @endsection
 ```
 ---
-
 ##### `create.blade.php`: (form only)
 ```html
 @extends('layouts.app')
 @section('content')
 @section('title', 'CRUD10 - Post Create')
-<!-- Table is here -->
 <div class="main-content">
-  <div class="main-content-inner">
-    <div class="breadcrumbs ace-save-state" id="breadcrumbs">
-      <ul class="breadcrumb">
-        <li>
-          <i class="ace-icon fa fa-home home-icon"></i>
-          <a href="#">Home</a>
-        </li>
+	<div class="widget-header widget-header-flat " style="background-color: #618f8f;">
+	  @if(session('error'))
+	  <div class="alert alert-danger">{{ session('error') }}</div>
+	  @endif
 
-        <li>
-          <a href="#">Tables</a>
-        </li>
-        <li class="active">Create New Post</li>
-      </ul><!-- /.breadcrumb -->
+	  @if(session('success'))
+	  <div class="alert alert-success">{{ session('success') }}</div>
+	  @endif
+	  <h4 class="widget-title" style="color: #fff;">Create Post</h4>
 
-      <div class="nav-search" id="nav-search">
-        <form class="form-search">
-          <span class="input-icon">
-            <input type="text" placeholder="Search ..." class="nav-search-input" id="nav-search-input" autocomplete="off" />
-            <i class="ace-icon fa fa-search nav-search-icon"></i>
-          </span>
-        </form>
-      </div><!-- /.nav-search -->
-    </div>
+	  <span class="widget-toolbar">
+		<a href="{{ route('dashboard.crud-10.index') }}" style="color: #fff;">
+		  <i class="ace-icon fa fa-plus"></i> Go To Index
+		</a>
+	  </span>
+	</div><!-- Table Header -->
+	<!-- Create Form Start -->
+	<form action="{{ route('dashboard.crud-10.store') }}" method="POST">
+	  @csrf
 
-    <div class="page-content">
+	  {{-- Category --}}
+	  <div class="form-group">
+		<label>Category <span class="text-danger">*</span></label>
+		<select id="crud7_id" name="crud7_id" class="form-control" 
+				onchange="window.location='{{ route('dashboard.crud-10.create') }}?category=' + this.value">
+		  <option value="">-- Select Category --</option>
+		  @foreach($categories as $cat)
+		  <option value="{{ $cat->id }}" {{ old('crud7_id', $selectedCategory) == $cat->id ? 'selected' : '' }}>
+			{{ $cat->name }}
+		  </option>
+		  @endforeach
+		</select>
+		@error('crud7_id') <small class="text-danger">{{ $message }}</small> @enderror
+	  </div>
 
-      <div class="page-header">
-        <h1>
-          Tables
-          <small>
-            <i class="ace-icon fa fa-angle-double-right"></i>
-            Create New Post
-          </small>
-        </h1>
-      </div>
+	  {{-- Subcategory --}}
+	  <div class="form-group">
+		<label>Subcategory</label>
+		<select name="crud8_id" id="crud8_id" class="form-control" 
+				onchange="window.location='{{ route('dashboard.crud-10.create') }}?
+						  category={{ $selectedCategory }}&subcategory=' + this.value">
+		  <option value="">-- Select Subcategory --</option>
+		  @foreach($subcategories as $sub)
+		  <option value="{{ $sub->id }}" 
+				  {{ old('crud8_id', $selectedSubcategory) == $sub->id ? 'selected' : '' }}>
+			{{ $sub->name }}
+		  </option>
+		  @endforeach
+		</select>
+		@error('crud8_id') <small class="text-danger">{{ $message }}</small> @enderror
+	  </div>
 
-      <div class="row">
-        <div class="col-xs-12">
-          <!-- PAGE CONTENT BEGINS -->
+	  {{-- Sub-Subcategory --}}
+	  <div class="form-group">
+		<label>Sub-Subcategory (optional)</label>
+		<select name="crud9_id" id="crud9_id" class="form-control">
+		  <option value="">-- Select Sub-Subcategory --</option>
+		  @foreach($subsubcategories as $subsub)
+		  <option value="{{ $subsub->id }}" {{ old('crud9_id') == $subsub->id ? 'selected' : '' }}>
+			{{ $subsub->name }}
+		  </option>
+		  @endforeach
+		</select>
+		@error('crud9_id') <small class="text-danger">{{ $message }}</small> @enderror
+	  </div>
 
-          @if(session('error'))
-          <div class="alert alert-danger">{{ session('error') }}</div>
-          @endif
+	  {{-- Post Serial --}}
+	  <div class="form-group mb-3">
+		<label>Post Serial *</label>
+		<input type="number" name="post_serial" class="form-control" value="{{ old('post_serial') }}" required>
+		@error('post_serial') <span class="text-danger">{{ $message }}</span> @enderror
+	  </div>
 
-          @if(session('success'))
-          <div class="alert alert-success">{{ session('success') }}</div>
-          @endif
-          
-          <div class="row">
-            <div class="col-xs-12 ">
-              <div class="col-md-2"></div>
+	  {{-- Post Name --}}
+	  <div class="form-group mb-3">
+		<label>Post Name *</label>
+		<input type="text" name="post_name" class="form-control" value="{{ old('post_name') }}" required>
+		@error('post_name') <span class="text-danger">{{ $message }}</span> @enderror
+	  </div>
 
-              <div class="col-md-8">
-                <div class="clearfix">
-                  <div class="pull-right tableTools-container"></div>
-                </div>
-                <div class="widget-header widget-header-flat " style="background-color: #618f8f;">
-                  <h4 class="widget-title" style="color: #fff;">Create Post</h4>
+	  {{-- Post Title --}}
+	  <div class="form-group mb-3">
+		<label>Post Title *</label>
+		<input type="text" name="post_title" class="form-control" value="{{ old('post_title') }}" required>
+		@error('post_title') <span class="text-danger">{{ $message }}</span> @enderror
+	  </div>
 
-                  <span class="widget-toolbar">
-                    <a href="{{ route('dashboard.crud-10.index') }}" style="color: #fff;">
-                      <i class="ace-icon fa fa-plus"></i> Go To Index
-                    </a>
-                  </span>
-                </div>
-                <!-- div.table-responsive -->
-                <!-- Create Form Start -->
-                <form action="{{ route('dashboard.crud-10.store') }}" method="POST">
-                  @csrf
+	  {{-- Short Description --}}
+	  <div class="form-group mb-3">
+		<label>Short Description</label>
+		<textarea name="short_description" class="form-control" rows="2">{{ old('short_description') }}</textarea>
+		@error('short_description') <small class="text-danger">{{ $message }}</small> @enderror
+	  </div>
 
-                  {{-- Category --}}
-                  <div class="form-group">
-                    <label>Category <span class="text-danger">*</span></label>
-                    <select id="crud7_id" name="crud7_id" class="form-control" onchange="window.location='{{ route('dashboard.crud-10.create') }}?category=' + this.value">
-                      <option value="">-- Select Category --</option>
-                      @foreach($categories as $cat)
-                      <option value="{{ $cat->id }}" {{ old('crud7_id', $selectedCategory) == $cat->id ? 'selected' : '' }}>
-                        {{ $cat->name }}
-                      </option>
-                      @endforeach
-                    </select>
-                    @error('crud7_id') <small class="text-danger">{{ $message }}</small> @enderror
-                  </div>
+	  {{-- Full Post --}}
+	  <div class="form-group mb-3">
+		<label>Full Post *</label>
+		<textarea name="post" class="form-control" rows="5">{{ old('post') }}</textarea>
+		@error('post') <small class="text-danger">{{ $message }}</small> @enderror
+	  </div>
 
-                  {{-- Subcategory --}}
-                  <div class="form-group">
-                    <label>Subcategory</label>
-                    <select name="crud8_id" id="crud8_id" class="form-control" onchange="window.location='{{ route('dashboard.crud-10.create') }}?category={{ $selectedCategory }}&subcategory=' + this.value">
-                      <option value="">-- Select Subcategory --</option>
-                      @foreach($subcategories as $sub)
-                      <option value="{{ $sub->id }}" {{ old('crud8_id', $selectedSubcategory) == $sub->id ? 'selected' : '' }}>
-                        {{ $sub->name }}
-                      </option>
-                      @endforeach
-                    </select>
-                    @error('crud8_id') <small class="text-danger">{{ $message }}</small> @enderror
-                  </div>
+	  {{-- Status --}}
+	  <div class="form-group mb-3">
+		<label>Status *</label>
+		<select name="status" class="form-select" required>
+		  <option value="active" {{ old('status') == 'active' ? 'selected' : '' }}>Active</option>
+		  <option value="inactive" {{ old('status') == 'inactive' ? 'selected' : '' }}>Inactive</option>
+		</select>
+		@error('status') <small class="text-danger">{{ $message }}</small> @enderror
+	  </div>
 
-                  {{-- Sub-Subcategory --}}
-                  <div class="form-group">
-                    <label>Sub-Subcategory (optional)</label>
-                    <select name="crud9_id" id="crud9_id" class="form-control">
-                      <option value="">-- Select Sub-Subcategory --</option>
-                      @foreach($subsubcategories as $subsub)
-                      <option value="{{ $subsub->id }}" {{ old('crud9_id') == $subsub->id ? 'selected' : '' }}>
-                        {{ $subsub->name }}
-                      </option>
-                      @endforeach
-                    </select>
-                    @error('crud9_id') <small class="text-danger">{{ $message }}</small> @enderror
-                  </div>
-
-                  {{-- Post Serial --}}
-                  <div class="form-group mb-3">
-                    <label>Post Serial *</label>
-                    <input type="number" name="post_serial" class="form-control" value="{{ old('post_serial') }}" required>
-                    @error('post_serial') <span class="text-danger">{{ $message }}</span> @enderror
-                  </div>
-
-                  {{-- Post Name --}}
-                  <div class="form-group mb-3">
-                    <label>Post Name *</label>
-                    <input type="text" name="post_name" class="form-control" value="{{ old('post_name') }}" required>
-                    @error('post_name') <span class="text-danger">{{ $message }}</span> @enderror
-                  </div>
-
-                  {{-- Post Title --}}
-                  <div class="form-group mb-3">
-                    <label>Post Title *</label>
-                    <input type="text" name="post_title" class="form-control" value="{{ old('post_title') }}" required>
-                    @error('post_title') <span class="text-danger">{{ $message }}</span> @enderror
-                  </div>
-
-                  {{-- Short Description --}}
-                  <div class="form-group mb-3">
-                    <label>Short Description</label>
-                    <textarea name="short_description" class="form-control" rows="2">{{ old('short_description') }}</textarea>
-                    @error('short_description') <small class="text-danger">{{ $message }}</small> @enderror
-                  </div>
-
-                  {{-- Full Post --}}
-                  <div class="form-group mb-3">
-                    <label>Full Post *</label>
-                    <textarea name="post" class="form-control" rows="5">{{ old('post') }}</textarea>
-                    @error('post') <small class="text-danger">{{ $message }}</small> @enderror
-                  </div>
-
-                  {{-- Status --}}
-                  <div class="form-group mb-3">
-                    <label>Status *</label>
-                    <select name="status" class="form-select" required>
-                      <option value="active" {{ old('status') == 'active' ? 'selected' : '' }}>Active</option>
-                      <option value="inactive" {{ old('status') == 'inactive' ? 'selected' : '' }}>Inactive</option>
-                    </select>
-                    @error('status') <small class="text-danger">{{ $message }}</small> @enderror
-                  </div>
-
-                  {{-- Submit --}}
-                  <div class="form-actions text-center mt-3">
-                    <button type="submit" class="btn btn-success btn-sm">
-                      <i class="fa fa-save"></i> Save
-                    </button>
-                    <a href="{{ route('dashboard.crud-10.index') }}" class="btn btn-warning btn-sm">
-                      <i class="fa fa-arrow-left"></i> Back
-                    </a>
-                  </div>
-                </form>
-                {{-- Form End --}}
-              </div>
-              <div class="col-md-2"></div>
-            </div>
-          </div>
-          <!-- PAGE CONTENT ENDS -->
-        </div><!-- /.col -->
-      </div>
-    </div><!-- /.page-content -->
-  </div>
+	  {{-- Submit --}}
+	  <div class="form-actions text-center mt-3">
+		<button type="submit" class="btn btn-success btn-sm">
+		  <i class="fa fa-save"></i> Save
+		</button>
+		<a href="{{ route('dashboard.crud-10.index') }}" class="btn btn-warning btn-sm">
+		  <i class="fa fa-arrow-left"></i> Back
+		</a>
+	  </div>
+	</form>
+	{{-- Form End --}}
 </div>
 <!-- /.main-content -->
 @endsection
@@ -769,125 +722,94 @@ ___
 @section('title', 'CRUD10 - Post Edit')
 <!-- Edit form -->
 <div class="main-content">
-  <div class="main-content-inner">
-    <div class="breadcrumbs ace-save-state" id="breadcrumbs">
-      <ul class="breadcrumb">
-        <li><i class="ace-icon fa fa-home home-icon"></i><a href="#">Home</a></li>
-        <li><a href="#">Tables</a></li>
-        <li class="active">Edit Sub-Sub-Category</li>
-      </ul>
-    </div>
+	<div class="widget-header widget-header-flat " style="background-color: #618f8f;">
+	  <h4 class="widget-title" style="color: #fff;">Edit Sub-Sub-Category</h4>
 
-    <div class="page-content">
-      <div class="page-header">
-        <h1>
-          Edit Entry
-          <small><i class="ace-icon fa fa-angle-double-right"></i> Update Existing Sub-Sub-Category</small>
-        </h1>
-      </div>
-      <div class="row">
-        <div class="col-xs-12">
-          <div class="row">
-            <div class="col-xs-12 ">
-              <div class="col-md-2"></div>
+	  <span class="widget-toolbar">
+		<a href="{{ route('dashboard.crud-9.index') }}" style="color: #fff;">
+		  <i class="ace-icon fa fa-list"></i> Back to List
+		</a>
+	  </span>
+	</div><!-- Table Header -->
 
-              <div class="col-md-8">
-                <div class="widget-header widget-header-flat " style="background-color: #618f8f;">
-                  <h4 class="widget-title" style="color: #fff;">Edit Sub-Sub-Category</h4>
+	<!-- Edit Form Start -->
+	<form action="{{ route('dashboard.crud-10.update', $crud10->id) }}" method="POST">
+	  @csrf
+	  @method('PUT')
 
-                  <span class="widget-toolbar">
-                    <a href="{{ route('dashboard.crud-9.index') }}" style="color: #fff;">
-                      <i class="ace-icon fa fa-list"></i> Back to List
-                    </a>
-                  </span>
-                </div>
+	  <div class="mb-3">
+		<label>Category *</label>
+		<select name="crud7_id" class="form-control" required>
+		  <option value="">-- Select Category --</option>
+		  @foreach($categories as $cat)
+		  <option value="{{ $cat->id }}" {{ $crud10->crud7_id == $cat->id ? 'selected' : '' }}>
+			{{ $cat->name }}
+		  </option>
+		  @endforeach
+		</select>
+	  </div>
 
-                <!-- Edit Form Start -->
-                <form action="{{ route('dashboard.crud-10.update', $crud10->id) }}" method="POST">
-                  @csrf
-                  @method('PUT')
+	  <div class="mb-3">
+		<label>Sub-Category</label>
+		<select name="crud8_id" class="form-control">
+		  <option value="">-- Optional --</option>
+		  @foreach($subcategories as $sub)
+		  <option value="{{ $sub->id }}" {{ $crud10->crud8_id == $sub->id ? 'selected' : '' }}>
+			{{ $sub->name }}
+		  </option>
+		  @endforeach
+		</select>
+	  </div>
 
-                  <div class="mb-3">
-                    <label>Category *</label>
-                    <select name="crud7_id" class="form-control" required>
-                      <option value="">-- Select Category --</option>
-                      @foreach($categories as $cat)
-                      <option value="{{ $cat->id }}" {{ $crud10->crud7_id == $cat->id ? 'selected' : '' }}>
-                        {{ $cat->name }}
-                      </option>
-                      @endforeach
-                    </select>
-                  </div>
+	  <div class="mb-3">
+		<label>Sub-Sub-Category</label>
+		<select name="crud9_id" class="form-control">
+		  <option value="">-- Optional --</option>
+		  @foreach($subsubcategories as $subsub)
+		  <option value="{{ $subsub->id }}" {{ $crud10->crud9_id == $subsub->id ? 'selected' : '' }}>
+			{{ $subsub->name }}
+		  </option>
+		  @endforeach
+		</select>
+	  </div>
 
-                  <div class="mb-3">
-                    <label>Sub-Category</label>
-                    <select name="crud8_id" class="form-control">
-                      <option value="">-- Optional --</option>
-                      @foreach($subcategories as $sub)
-                      <option value="{{ $sub->id }}" {{ $crud10->crud8_id == $sub->id ? 'selected' : '' }}>
-                        {{ $sub->name }}
-                      </option>
-                      @endforeach
-                    </select>
-                  </div>
+	  <div class="mb-3">
+		<label>Post Serial *</label>
+		<input type="number" name="post_serial" class="form-control" value="{{ $crud10->post_serial }}" required>
+	  </div>
 
-                  <div class="mb-3">
-                    <label>Sub-Sub-Category</label>
-                    <select name="crud9_id" class="form-control">
-                      <option value="">-- Optional --</option>
-                      @foreach($subsubcategories as $subsub)
-                      <option value="{{ $subsub->id }}" {{ $crud10->crud9_id == $subsub->id ? 'selected' : '' }}>
-                        {{ $subsub->name }}
-                      </option>
-                      @endforeach
-                    </select>
-                  </div>
+	  <div class="mb-3">
+		<label>Post Name *</label>
+		<input type="text" name="post_name" class="form-control" value="{{ $crud10->post_name }}" required>
+	  </div>
 
-                  <div class="mb-3">
-                    <label>Post Serial *</label>
-                    <input type="number" name="post_serial" class="form-control" value="{{ $crud10->post_serial }}" required>
-                  </div>
+	  <div class="mb-3">
+		<label>Post Title *</label>
+		<input type="text" name="post_title" class="form-control" value="{{ $crud10->post_title }}" required>
+	  </div>
 
-                  <div class="mb-3">
-                    <label>Post Name *</label>
-                    <input type="text" name="post_name" class="form-control" value="{{ $crud10->post_name }}" required>
-                  </div>
+	  <div class="mb-3">
+		<label>Short Description</label>
+		<textarea name="short_description" class="form-control">{{ $crud10->short_description }}</textarea>
+	  </div>
 
-                  <div class="mb-3">
-                    <label>Post Title *</label>
-                    <input type="text" name="post_title" class="form-control" value="{{ $crud10->post_title }}" required>
-                  </div>
+	  <div class="mb-3">
+		<label>Post Content *</label>
+		<textarea name="post" class="form-control" rows="5">{{ $crud10->post }}</textarea>
+	  </div>
 
-                  <div class="mb-3">
-                    <label>Short Description</label>
-                    <textarea name="short_description" class="form-control">{{ $crud10->short_description }}</textarea>
-                  </div>
+	  <div class="mb-3">
+		<label>Status *</label>
+		<select name="status" class="form-control" required>
+		  <option value="active" {{ $crud10->status == 'active' ? 'selected' : '' }}>Active</option>
+		  <option value="inactive" {{ $crud10->status == 'inactive' ? 'selected' : '' }}>Inactive</option>
+		</select>
+	  </div>
 
-                  <div class="mb-3">
-                    <label>Post Content *</label>
-                    <textarea name="post" class="form-control" rows="5">{{ $crud10->post }}</textarea>
-                  </div>
-
-                  <div class="mb-3">
-                    <label>Status *</label>
-                    <select name="status" class="form-control" required>
-                      <option value="active" {{ $crud10->status == 'active' ? 'selected' : '' }}>Active</option>
-                      <option value="inactive" {{ $crud10->status == 'inactive' ? 'selected' : '' }}>Inactive</option>
-                    </select>
-                  </div>
-
-                  <button type="submit" class="btn btn-success">Update Post</button>
-                  <a href="{{ route('dashboard.crud-10.index') }}" class="btn btn-secondary">Cancel</a>
-                </form>
-
-                <!-- Edit Form End -->
-              </div>
-              <div class="col-md-2"></div>
-            </div>
-          </div>
-        </div><!-- /.col -->
-      </div>
-    </div><!-- /.page-content -->
+	  <button type="submit" class="btn btn-success">Update Post</button>
+	  <a href="{{ route('dashboard.crud-10.index') }}" class="btn btn-secondary">Cancel</a>
+	</form>
+	<!-- Edit Form End -->
   </div>
 </div>
 <!-- /.main-content -->
@@ -917,7 +839,6 @@ ___
 @endpush
 ```
 ____
-
 #### **Using Ajax Rendering :**
 
 ##### `index.blade.php`:
@@ -925,7 +846,6 @@ ____
 	Same as like server side rendering index view.
 ```
 ___
-
 ##### `create.blade.php`:
 ```html
 @extends('layouts.app')
@@ -933,170 +853,112 @@ ___
 @section('title', 'CRUD10 - Post Create')
 <!-- Table is here -->
 <div class="main-content">
-  <div class="main-content-inner">
-    <div class="breadcrumbs ace-save-state" id="breadcrumbs">
-      <ul class="breadcrumb">
-        <li>
-          <i class="ace-icon fa fa-home home-icon"></i>
-          <a href="#">Home</a>
-        </li>
+  <!-- PAGE CONTENT BEGINS -->
 
-        <li>
-          <a href="#">Tables</a>
-        </li>
-        <li class="active">Create New Post</li>
-      </ul><!-- /.breadcrumb -->
+  @if(session('error'))
+  <div class="alert alert-danger">{{ session('error') }}</div>
+  @endif
 
-      <div class="nav-search" id="nav-search">
-        <form class="form-search">
-          <span class="input-icon">
-            <input type="text" placeholder="Search ..." class="nav-search-input" id="nav-search-input" autocomplete="off" />
-            <i class="ace-icon fa fa-search nav-search-icon"></i>
-          </span>
-        </form>
-      </div><!-- /.nav-search -->
-    </div>
-
-    <div class="page-content">
-
-      <div class="page-header">
-        <h1>
-          Tables
-          <small>
-            <i class="ace-icon fa fa-angle-double-right"></i>
-            Create New Post
-          </small>
-        </h1>
-      </div>
-
-      <div class="row">
-        <div class="col-xs-12">
-          <!-- PAGE CONTENT BEGINS -->
-
-          @if(session('error'))
-          <div class="alert alert-danger">{{ session('error') }}</div>
-          @endif
-
-          @if(session('success'))
-          <div class="alert alert-success">{{ session('success') }}</div>
-          @endif
-
-          <div class="row">
-            <div class="col-xs-12 ">
-              <div class="col-md-2"></div>
-
-              <div class="col-md-8">
-                <div class="clearfix">
-                  <div class="pull-right tableTools-container"></div>
-                </div>
-                <div class="widget-header widget-header-flat " style="background-color: #618f8f;">
-                  <h4 class="widget-title" style="color: #fff;">Create Post</h4>
-
-                  <span class="widget-toolbar">
-                    <a href="{{ route('dashboard.crud-10.index') }}" style="color: #fff;">
-                      <i class="ace-icon fa fa-plus"></i> Go To Index
-                    </a>
-                  </span>
-                </div>
-                <!-- div.table-responsive -->
-
-                <!-- Main form is here -->
-                <form action="{{ route('dashboard.crud-10.store') }}" method="POST">
-                  @csrf
-
-                  {{-- Parent Category (From Crud7) --}}
-                  <div class="form-group mb-3">
-                    <label>Category *</label>
-                    <select name="crud7_id" id="crud7_id" class="form-control">
-                      <option value="">-- Select Category --</option>
-                      @foreach($categories as $cat)
-                      <option value="{{ $cat->id }}">{{ $cat->name }}</option>
-                      @endforeach
-                    </select>
-                  </div>
-
-                  {{-- Parent Sub-Category (From Crud8) --}}
-                  <div class="form-group mb-3">
-                    <label>Subcategory</label>
-                    <select name="crud8_id" id="crud8_id" class="form-control">
-                      <option value="">-- Select Subcategory --</option>
-                    </select>
-                  </div>
-
-                  {{-- Child Sub-Sub-Category (From Crud9) --}}
-                  <div class="form-group mb-3">
-                    <label>Sub-Subcategory</label>
-                    <select name="crud9_id" id="crud9_id" class="form-control">
-                      <option value="">-- Select Sub-Subcategory --</option>
-                    </select>
-                  </div>
-
-                  {{-- Post Serial --}}
-                  <div class="form-group mb-3">
-                    <label>Post Serial *</label>
-                    <input type="number" name="post_serial" class="form-control" value="{{ old('post_serial') }}" required>
-                    @error('post_serial') <span class="text-danger">{{ $message }}</span> @enderror
-                  </div>
-
-                  {{-- Post Name --}}
-                  <div class="form-group mb-3">
-                    <label>Post Name *</label>
-                    <input type="text" name="post_name" class="form-control" value="{{ old('post_name') }}" required>
-                    @error('post_name') <span class="text-danger">{{ $message }}</span> @enderror
-                  </div>
-
-                  {{-- Post Title --}}
-                  <div class="form-group mb-3">
-                    <label>Post Title *</label>
-                    <input type="text" name="post_title" class="form-control" value="{{ old('post_title') }}" required>
-                    @error('post_title') <span class="text-danger">{{ $message }}</span> @enderror
-                  </div>
-
-                  {{-- Short Description --}}
-                  <div class="form-group mb-3">
-                    <label>Short Description</label>
-                    <textarea name="short_description" class="form-control" rows="2">{{ old('short_description') }}</textarea>
-                    @error('short_description') <small class="text-danger">{{ $message }}</small> @enderror
-                  </div>
-
-                  {{-- Full Post --}}
-                  <div class="form-group mb-3">
-                    <label>Full Post *</label>
-                    <textarea name="post" class="form-control" rows="5">{{ old('post') }}</textarea>
-                    @error('post') <small class="text-danger">{{ $message }}</small> @enderror
-                  </div>
-
-                  {{-- Status --}}
-                  <div class="form-group mb-3">
-                    <label>Status *</label>
-                    <select name="status" class="form-select" required>
-                      <option value="active" {{ old('status') == 'active' ? 'selected' : '' }}>Active</option>
-                      <option value="inactive" {{ old('status') == 'inactive' ? 'selected' : '' }}>Inactive</option>
-                    </select>
-                    @error('status') <small class="text-danger">{{ $message }}</small> @enderror
-                  </div>
-
-                  {{-- Submit --}}
-                  <div class="form-actions text-center mt-3">
-                    <button type="submit" class="btn btn-success btn-sm">
-                      <i class="fa fa-save"></i> Save
-                    </button>
-                    <a href="{{ route('dashboard.crud-10.index') }}" class="btn btn-warning btn-sm">
-                      <i class="fa fa-arrow-left"></i> Back
-                    </a>
-                  </div>
-                </form>
-                {{-- Form End --}}
-              </div>
-              <div class="col-md-2"></div>
-            </div>
-          </div>
-
-          <!-- PAGE CONTENT ENDS -->
-        </div><!-- /.col -->
-      </div>
-    </div><!-- /.page-content -->
-  </div>
+  @if(session('success'))
+  <div class="alert alert-success">{{ session('success') }}</div>
+  @endif
+	<div class="widget-header widget-header-flat " style="background-color: #618f8f;">
+	  <h4 class="widget-title" style="color: #fff;">Create Post</h4>
+	
+	  <span class="widget-toolbar">
+		<a href="{{ route('dashboard.crud-10.index') }}" style="color: #fff;">
+		  <i class="ace-icon fa fa-plus"></i> Go To Index
+		</a>
+	  </span>
+	</div><!-- Table Header -->
+	<!-- Create form is here -->
+	<form action="{{ route('dashboard.crud-10.store') }}" method="POST">
+	  @csrf
+	
+	  {{-- Parent Category (From Crud7) --}}
+	  <div class="form-group mb-3">
+		<label>Category *</label>
+		<select name="crud7_id" id="crud7_id" class="form-control">
+		  <option value="">-- Select Category --</option>
+		  @foreach($categories as $cat)
+		  <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+		  @endforeach
+		</select>
+	  </div>
+	
+	  {{-- Parent Sub-Category (From Crud8) --}}
+	  <div class="form-group mb-3">
+		<label>Subcategory</label>
+		<select name="crud8_id" id="crud8_id" class="form-control">
+		  <option value="">-- Select Subcategory --</option>
+		</select>
+	  </div>
+	
+	  {{-- Child Sub-Sub-Category (From Crud9) --}}
+	  <div class="form-group mb-3">
+		<label>Sub-Subcategory</label>
+		<select name="crud9_id" id="crud9_id" class="form-control">
+		  <option value="">-- Select Sub-Subcategory --</option>
+		</select>
+	  </div>
+	
+	  {{-- Post Serial --}}
+	  <div class="form-group mb-3">
+		<label>Post Serial *</label>
+		<input type="number" name="post_serial" class="form-control" value="{{ old('post_serial') }}" required>
+		@error('post_serial') <span class="text-danger">{{ $message }}</span> @enderror
+	  </div>
+	
+	  {{-- Post Name --}}
+	  <div class="form-group mb-3">
+		<label>Post Name *</label>
+		<input type="text" name="post_name" class="form-control" value="{{ old('post_name') }}" required>
+		@error('post_name') <span class="text-danger">{{ $message }}</span> @enderror
+	  </div>
+	
+	  {{-- Post Title --}}
+	  <div class="form-group mb-3">
+		<label>Post Title *</label>
+		<input type="text" name="post_title" class="form-control" value="{{ old('post_title') }}" required>
+		@error('post_title') <span class="text-danger">{{ $message }}</span> @enderror
+	  </div>
+	
+	  {{-- Short Description --}}
+	  <div class="form-group mb-3">
+		<label>Short Description</label>
+		<textarea name="short_description" class="form-control" rows="2">{{ old('short_description') }}</textarea>
+		@error('short_description') <small class="text-danger">{{ $message }}</small> @enderror
+	  </div>
+	
+	  {{-- Full Post --}}
+	  <div class="form-group mb-3">
+		<label>Full Post *</label>
+		<textarea name="post" class="form-control" rows="5">{{ old('post') }}</textarea>
+		@error('post') <small class="text-danger">{{ $message }}</small> @enderror
+	  </div>
+	
+	  {{-- Status --}}
+	  <div class="form-group mb-3">
+		<label>Status *</label>
+		<select name="status" class="form-select" required>
+		  <option value="active" {{ old('status') == 'active' ? 'selected' : '' }}>Active</option>
+		  <option value="inactive" {{ old('status') == 'inactive' ? 'selected' : '' }}>Inactive</option>
+		</select>
+		@error('status') <small class="text-danger">{{ $message }}</small> @enderror
+	  </div>
+	
+	  {{-- Submit --}}
+	  <div class="form-actions text-center mt-3">
+		<button type="submit" class="btn btn-success btn-sm">
+		  <i class="fa fa-save"></i> Save
+		</button>
+		<a href="{{ route('dashboard.crud-10.index') }}" class="btn btn-warning btn-sm">
+		  <i class="fa fa-arrow-left"></i> Back
+		</a>
+	  </div>
+	</form>
+	<!-- Create Form End -->
+	</div>
 </div>
 @endsection
 
@@ -1187,7 +1049,6 @@ ___
 @endpush
 ```
 _____
-
 ##### `edit.blade.php`:
 ```html
 @extends('layouts.app')
@@ -1221,8 +1082,6 @@ _____
               <div class="col-md-8">
                 <div class="widget-header widget-header-flat " style="background-color: #618f8f;">
                   <h4 class="widget-title" style="color: #fff;">Edit Post</h4>
-
-
                   <span class="widget-toolbar">
 	                {{-- Dynamic Back Button --}}
                     @if (request()->query('from') === 'show')
@@ -1278,25 +1137,29 @@ _____
                   {{-- Post Serial --}}
                   <div class="mb-3">
                     <label>Post Serial *</label>
-                    <input type="number" name="post_serial" class="form-control" value="{{ $crud10->post_serial }}" required>
+                    <input type="number" name="post_serial" class="form-control"
+		                   value="{{ $crud10->post_serial }}" required>
                   </div>
 
                   {{-- Post Name --}}
                   <div class="mb-3">
                     <label>Post Name *</label>
-                    <input type="text" name="post_name" class="form-control" value="{{ $crud10->post_name }}" required>
+                    <input type="text" name="post_name" class="form-control" 
+		                   value="{{ $crud10->post_name }}" required>
                   </div>
 
                   {{-- Post Title --}}
                   <div class="mb-3">
                     <label>Post Title *</label>
-                    <input type="text" name="post_title" class="form-control" value="{{ $crud10->post_title }}" required>
+                    <input type="text" name="post_title" class="form-control" 
+		                   value="{{ $crud10->post_title }}" required>
                   </div>
 
                   {{-- Short Description --}}
                   <div class="mb-3">
                     <label>Short Description</label>
-                    <textarea name="short_description" class="form-control">{{ $crud10->short_description }}</textarea>
+                    <textarea name="short_description" class="form-control">
+                    {{ $crud10->short_description }}</textarea>
                   </div>
 
                   {{-- Post Content --}}
@@ -1436,7 +1299,6 @@ _____
 @endpush
 ```
 _____
-
 ##### `show.blade.php`:
 ```html
 @extends('layouts.app')
@@ -1475,19 +1337,16 @@ _____
             <div class="widget-header widget-header-flat" style="background-color: #618f8f;">
               <h4 class="widget-title" style="color: #fff;">Post Information</h4>
               <span class="widget-toolbar">
-
               <!-- Edit Button -->
-              <a href="{{ route('dashboard.crud-10.edit', $crud10->id ) }}?from=show" style="color: #fff; margin-right: 10px; padding-left: 10px;">
+              <a href="{{ route('dashboard.crud-10.edit', $crud10->id ) }}?from=show"
+	             style="color: #fff; margin-right: 10px; padding-left: 10px;">
                 <i class="ace-icon fa fa-pencil"></i> Edit Post
               </a>
-
-                <!-- Back Button -->
-                <a href="{{ route('dashboard.crud-10.index') }}?from=show" style=" color: #fff; margin-right: 10px; border-left: 1px solid #fff;">
-
-                  <i class="ace-icon fa fa-arrow-left" style="margin-left: 5px;"></i> Back to List
-                </a>
-                  <i class="ace-icon fa fa-arrow-left" style="margin-left: 5px;"></i> Back to List
-                </a>
+              <!-- Back Button -->
+              <a href="{{ route('dashboard.crud-10.index') }}?from=show"
+	             style=" color: #fff; margin-right: 10px; border-left: 1px solid #fff;">
+                <i class="ace-icon fa fa-arrow-left" style="margin-left: 5px;"></i> Back to List
+              </a>
               </span>
             </div>
 
